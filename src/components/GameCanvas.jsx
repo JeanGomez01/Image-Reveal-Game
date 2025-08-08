@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { enemies } from '../actors/enemy.model';
 const sizeGameImage = 600
 
 const GameCanvas = () => {
+    const [gameState, setGameState] = useState('playing');
+
+
     const canvasRef = useRef(null);
     const player = useRef({ x: 0, y: 0, size: 10, speed: 2 });
     const revealedPixels = useRef([]);
@@ -40,7 +43,7 @@ const GameCanvas = () => {
         const keys = {};
 
         const image = new Image();
-        image.src = '/cute-pixel-cartoon-8bit-character-260nw-2501380663.jpg';
+        image.src = '/image2.jpg';
 
         const handleKeyDown = (e) => {
             keys[e.key] = true;
@@ -52,7 +55,30 @@ const GameCanvas = () => {
         };
 
         const drawImage = () => {
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const canvasRatio = canvas.width / canvas.height;
+            const imageRatio = image.width / image.height;
+
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imageRatio > canvasRatio) {
+                // Imagen más ancha que el canvas
+                drawHeight = canvas.height;
+                drawWidth = image.width * (drawHeight / image.height);
+                offsetX = (canvas.width - drawWidth) / 2;
+                offsetY = 0;
+            } else {
+                // Imagen más alta que el canvas
+                drawWidth = canvas.width;
+                drawHeight = image.height * (drawWidth / image.width);
+                offsetX = 0;
+                offsetY = (canvas.height - drawHeight) / 2;
+            }
+
+            ctx.drawImage(
+                image,
+                0, 0, image.width, image.height,
+                offsetX, offsetY, drawWidth, drawHeight
+            );
         };
 
         const drawCover = () => {
@@ -62,9 +88,15 @@ const GameCanvas = () => {
 
         const drawRevealedZones = () => {
             revealedPixels.current.forEach(pos => {
+                // Calcula la posición relativa en la imagen original
+                const srcX = (pos.x / canvas.width) * image.width;
+                const srcY = (pos.y / canvas.height) * image.height;
+                const srcSizeX = (10 / canvas.width) * image.width;
+                const srcSizeY = (10 / canvas.height) * image.height;
+
                 ctx.drawImage(
                     image,
-                    pos.x, pos.y, 10, 10,
+                    srcX, srcY, srcSizeX, srcSizeY,
                     pos.x, pos.y, 10, 10
                 );
             });
@@ -124,6 +156,7 @@ const GameCanvas = () => {
         };
 
         const gameLoop = () => {
+            if (gameState !== 'playing') return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawImage();
             drawCover();
@@ -157,9 +190,8 @@ const GameCanvas = () => {
                         const p1 = trail.current[i];
                         const p2 = trail.current[i + 1];
                         if (intersectsCircleAndLine(enemy.x, enemy.y, enemy.radius, p1, p2)) {
-                            alert('💥 ¡Perdiste! El enemigo tocó tu línea.');
-                            window.location.reload(); // Reinicia el juego
-                            return; // Detiene el loop actual
+                            setGameState('lost');
+                            return;
                         }
                     }
                 }
@@ -172,11 +204,11 @@ const GameCanvas = () => {
 
 
         image.onload = () => {
-            // Posición inicial en el borde
             player.current.x = 0;
             player.current.y = canvas.height / 2;
             gameLoop();
         };
+
 
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
@@ -188,12 +220,37 @@ const GameCanvas = () => {
     }, []);
 
     return (
-        <canvas
+        <>  <canvas
             ref={canvasRef}
             width={sizeGameImage}
             height={sizeGameImage}
-            style={{ border: '2px solid #000', backgroundColor: 'black' }}
+            style={{
+                border: '2px solid #000',
+                backgroundColor: 'black',
+                imageRendering: 'pixelated'  // <- añade esta línea
+            }}
         />
+            {gameState === 'lost' && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        background: 'rgba(0, 0, 0, 0.8)',
+                        color: 'red',
+                        fontSize: '2rem',
+                        padding: '1rem 2rem',
+                        borderRadius: '10px',
+                        textAlign: 'center'
+                    }}
+                >
+                    💥 ¡Has perdido!
+                    <br />
+                    <button onClick={() => window.location.reload()}>Reintentar</button>
+                </div>
+            )}
+        </>
     );
 };
 
