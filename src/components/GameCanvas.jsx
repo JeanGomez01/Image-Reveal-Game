@@ -77,6 +77,36 @@ const GameCanvas = () => {
         return false;
     };
 
+    // NUEVA: Función para obtener todos los segmentos del contorno disponible
+    const getAllContourSegments = () => {
+        const segments = [];
+
+        // Segmentos de los bordes del canvas
+        segments.push(
+            { start: { x: 0, y: 0 }, end: { x: sizeGameImage, y: 0 }, type: 'border' },
+            { start: { x: sizeGameImage, y: 0 }, end: { x: sizeGameImage, y: sizeGameImage }, type: 'border' },
+            { start: { x: sizeGameImage, y: sizeGameImage }, end: { x: 0, y: sizeGameImage }, type: 'border' },
+            { start: { x: 0, y: sizeGameImage }, end: { x: 0, y: 0 }, type: 'border' }
+        );
+
+        // Segmentos de áreas completadas
+        for (let path of gameState.completedPaths) {
+            if (path.length > 2) {
+                for (let i = 0; i < path.length; i++) {
+                    const current = path[i];
+                    const next = path[(i + 1) % path.length];
+                    segments.push({
+                        start: current,
+                        end: next,
+                        type: 'completed'
+                    });
+                }
+            }
+        }
+
+        return segments;
+    };
+
     // Función para verificar si un punto está en el contorno (bordes + bordes de áreas)
     const isOnContour = (x, y, tolerance = 5) => {
         // Bordes del canvas
@@ -135,6 +165,105 @@ const GameCanvas = () => {
         return Math.sqrt(dx * dx + dy * dy);
     };
 
+    // NUEVA: Función para encontrar el punto más cercano en el contorno
+    const findClosestContourPoint = (x, y, tolerance = 10) => {
+        const segments = getAllContourSegments();
+        let closestPoint = null;
+        let minDistance = tolerance;
+
+        for (let segment of segments) {
+            const dist = distanceToLineSegment(x, y, segment.start, segment.end);
+            if (dist < minDistance) {
+                minDistance = dist;
+                // Calcular el punto exacto más cercano en el segmento
+                const A = x - segment.start.x;
+                const B = y - segment.start.y;
+                const C = segment.end.x - segment.start.x;
+                const D = segment.end.y - segment.start.y;
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = lenSq !== 0 ? dot / lenSq : -1;
+                param = Math.max(0, Math.min(1, param));
+
+                closestPoint = {
+                    x: segment.start.x + param * C,
+                    y: segment.start.y + param * D
+                };
+            }
+        }
+
+        return closestPoint;
+    };
+
+    // NUEVA: Función para detectar si se ha formado un área cerrada
+    const detectClosedArea = (currentPath, startPoint, endPoint) => {
+        if (currentPath.length < 3) return null;
+
+        // Intentar encontrar un camino desde endPoint hasta startPoint usando contornos existentes
+        const closedPath = findPathAlongContour(endPoint, startPoint);
+
+        if (closedPath && closedPath.length > 0) {
+            // Combinar el path dibujado con el path del contorno
+            const completePath = [...currentPath, ...closedPath];
+            return completePath;
+        }
+
+        return null;
+    };
+
+    // NUEVA: Función para encontrar un camino a lo largo del contorno
+    const findPathAlongContour = (start, end, tolerance = 15) => {
+        const segments = getAllContourSegments();
+        const visited = new Set();
+
+        // Función recursiva para buscar el camino
+        const findPath = (currentPoint, targetPoint, path = [], depth = 0) => {
+            if (depth > 20) return null; // Evitar recursión infinita
+
+            const distToTarget = Math.sqrt(
+                Math.pow(currentPoint.x - targetPoint.x, 2) +
+                Math.pow(currentPoint.y - targetPoint.y, 2)
+            );
+
+            if (distToTarget <= tolerance) {
+                return [...path, targetPoint];
+            }
+
+            // Buscar segmentos conectados
+            for (let i = 0; i < segments.length; i++) {
+                if (visited.has(i)) continue;
+
+                const segment = segments[i];
+                const distToStart = Math.sqrt(
+                    Math.pow(currentPoint.x - segment.start.x, 2) +
+                    Math.pow(currentPoint.y - segment.start.y, 2)
+                );
+                const distToEnd = Math.sqrt(
+                    Math.pow(currentPoint.x - segment.end.x, 2) +
+                    Math.pow(currentPoint.y - segment.end.y, 2)
+                );
+
+                let nextPoint = null;
+                if (distToStart <= tolerance) {
+                    nextPoint = segment.end;
+                } else if (distToEnd <= tolerance) {
+                    nextPoint = segment.start;
+                }
+
+                if (nextPoint) {
+                    visited.add(i);
+                    const result = findPath(nextPoint, targetPoint, [...path, nextPoint], depth + 1);
+                    if (result) return result;
+                    visited.delete(i);
+                }
+            }
+
+            return null;
+        };
+
+        return findPath(start, end);
+    };
+
     const updateGame = () => {
         if (gameState.gameWon) return;
 
@@ -181,21 +310,39 @@ const GameCanvas = () => {
                 newY = targetY;
             }
 
-            // Detectar si está en el borde del canvas
-            const isOnBorder = newX <= 0 || newX >= sizeGameImage || newY <= 0 || newY >= sizeGameImage;
+            // Detectar si está en el borde del canvas o cerca de un contorno
+            const isOnBorder = newX <= 5 || newX >= sizeGameImage - 5 || newY <= 5 || newY >= sizeGameImage - 5;
+            const isNearContour = isOnContour(newX, newY, 10);
 
-            // Lógica de dibujo
-            if (isPKeyPressed && !isOnBorder && !isInRevealedArea(newX, newY)) {
-                if (!newState.isDrawing) {
+            // MEJORADA: Lógica de dibujo con detección de cierre avanzada
+            if (isPKeyPressed && !isInRevealedArea(newX, newY)) {
+                if (!newState.isDrawing && (isOnBorder || isNearContour)) {
+                    // Comenzar a dibujar
                     newState.isDrawing = true;
                     newState.currentPath = [{ x: newX, y: newY }];
-                } else {
+                } else if (newState.isDrawing) {
+                    // Continuar dibujando
                     newState.currentPath.push({ x: newX, y: newY });
                 }
-            } else if (newState.isDrawing && (isOnBorder || !isPKeyPressed)) {
+            } else if (newState.isDrawing && (!isPKeyPressed || isInRevealedArea(newX, newY))) {
+                // Terminar de dibujar
                 if (newState.currentPath.length > 10) {
-                    newState.completedPaths.push([...newState.currentPath]);
-                    newState.revealedArea += calculatePathArea(newState.currentPath);
+                    const startPoint = newState.currentPath[0];
+                    const endPoint = { x: newX, y: newY };
+
+                    // NUEVA: Intentar detectar cierre usando contornos existentes
+                    const closedArea = detectClosedArea(newState.currentPath, startPoint, endPoint);
+
+                    if (closedArea && closedArea.length > 10) {
+                        // Se detectó un área cerrada usando contornos existentes
+                        newState.completedPaths.push(closedArea);
+                        newState.revealedArea += calculatePathArea(closedArea);
+                    } else if (isOnBorder || isNearContour) {
+                        // Cierre tradicional (llegó a un borde o contorno)
+                        const finalPath = [...newState.currentPath, endPoint];
+                        newState.completedPaths.push(finalPath);
+                        newState.revealedArea += calculatePathArea(finalPath);
+                    }
                 }
                 newState.currentPath = [];
                 newState.isDrawing = false;
@@ -270,12 +417,14 @@ const GameCanvas = () => {
         });
     };
 
+    // MEJORADA: Cálculo de área corregido para polígonos cerrados
     const calculatePathArea = (path) => {
         if (path.length < 3) return 0;
 
         let area = 0;
-        for (let i = 0; i < path.length - 1; i++) {
-            area += (path[i].x * path[i + 1].y - path[i + 1].x * path[i].y);
+        for (let i = 0; i < path.length; i++) {
+            const j = (i + 1) % path.length;
+            area += (path[i].x * path[j].y - path[j].x * path[i].y);
         }
         return Math.abs(area) / 2;
     };
@@ -309,22 +458,16 @@ const GameCanvas = () => {
             });
         }
 
-        // Dibujar contornos disponibles para el jugador (visual debug - opcional)
-        if (gameState.completedPaths.length > 0) {
-            ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
-            ctx.lineWidth = 10;
-            gameState.completedPaths.forEach(path => {
-                if (path.length > 2) {
-                    ctx.beginPath();
-                    ctx.moveTo(path[0].x, path[0].y);
-                    path.forEach(point => {
-                        ctx.lineTo(point.x, point.y);
-                    });
-                    ctx.closePath();
-                    ctx.stroke();
-                }
-            });
-        }
+        // Dibujar contornos disponibles (debug visual)
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.2)';
+        ctx.lineWidth = 8;
+        const segments = getAllContourSegments();
+        segments.forEach(segment => {
+            ctx.beginPath();
+            ctx.moveTo(segment.start.x, segment.start.y);
+            ctx.lineTo(segment.end.x, segment.end.y);
+            ctx.stroke();
+        });
 
         // Dibujar path actual
         if (gameState.currentPath.length > 1) {
@@ -359,7 +502,7 @@ const GameCanvas = () => {
         ctx.arc(gameState.playerX, gameState.playerY, 6, 0, Math.PI * 2);
         ctx.fill();
 
-        // Indicador visual cuando está presionando P
+        // Indicador visual cuando está presionando Q
         if (keysPressed.current['q'] && !gameState.isDrawing) {
             ctx.strokeStyle = '#ffff00';
             ctx.lineWidth = 2;
@@ -404,13 +547,14 @@ const GameCanvas = () => {
             ctx.fillText('Presiona F5 para jugar de nuevo', sizeGameImage / 2, sizeGameImage / 2 + 50);
         }
 
-        // Instrucciones
+        // Instrucciones actualizadas
         if (gameState.completedPaths.length === 0 && !gameState.isDrawing) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.font = '14px Arial';
             ctx.textAlign = 'left';
-            ctx.fillText('Muévete solo por los contornos (bordes)', 10, sizeGameImage - 100);
-            ctx.fillText('Presiona Q para adentrarte y dibujar', 10, sizeGameImage - 80);
+            ctx.fillText('Muévete por los contornos (bordes y áreas completadas)', 10, sizeGameImage - 120);
+            ctx.fillText('Presiona Q para adentrarte y dibujar', 10, sizeGameImage - 100);
+            ctx.fillText('Puedes cerrar áreas usando contornos existentes', 10, sizeGameImage - 80);
             ctx.fillText('Los enemigos no pueden entrar en áreas reveladas', 10, sizeGameImage - 60);
             ctx.fillText('Completa 70% del área para ganar', 10, sizeGameImage - 40);
             ctx.fillText('¡Evita las esferas rojas!', 10, sizeGameImage - 20);
