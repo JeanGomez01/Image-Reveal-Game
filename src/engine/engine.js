@@ -297,13 +297,35 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     };
 
     const renderBackground = () => {
-        c2d.drawImage(
-            backgroundImgElement,
-            0, 0,
-            canvasElement.width, canvasElement.height,
-            0, 0,
-            canvasElement.width, canvasElement.height
-        );
+        // Tamaño del canvas
+        const cw = canvasElement.width;
+        const ch = canvasElement.height;
+
+        // Tamaño de la imagen
+        const iw = backgroundImgElement.width;
+        const ih = backgroundImgElement.height;
+
+        // Calcular el área de la imagen que mantiene el ratio del canvas
+        const canvasRatio = cw / ch;
+        const imageRatio = iw / ih;
+
+        let sx, sy, sw, sh;
+        if (imageRatio > canvasRatio) {
+            // Imagen más ancha que el canvas: recortar lados
+            sh = ih;
+            sw = ih * canvasRatio;
+            sx = (iw - sw) / 2;
+            sy = 0;
+        } else {
+            // Imagen más alta que el canvas: recortar arriba/abajo
+            sw = iw;
+            sh = iw / canvasRatio;
+            sx = 0;
+            sy = (ih - sh) / 2;
+        }
+
+        // Dibujar la imagen recortada y escalada al canvas
+        c2d.drawImage(backgroundImgElement, sx, sy, sw, sh, 0, 0, cw, ch);
     };
 
     const updateStats = (tFrame) => {
