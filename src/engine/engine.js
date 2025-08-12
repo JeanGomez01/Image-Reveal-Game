@@ -68,7 +68,9 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             player = createPlayer({
                 canvasW: canvasW,
                 canvasH: canvasH,
-                input: typeof getInput === 'function' ? getInput() : {}
+                input: typeof getInput === 'function' ? getInput() : {},
+                x: 0, // esquina superior izquierda
+                y: 0
             });
 
             console.log("Player created:", player);
@@ -120,7 +122,24 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         // Cargar la imagen de fondo
         backgroundImgElement = new Image();
         backgroundImgElement.onload = () => {
-            // Start the game loop once the image is loaded
+            // Ajustar el tamaño del canvas al de la imagen
+            canvasElement.width = backgroundImgElement.width;
+            canvasElement.height = backgroundImgElement.height;
+
+            // Actualizar variables globales
+            canvasW = backgroundImgElement.width / 2;
+            canvasH = backgroundImgElement.height / 2;
+
+            // Volver a inicializar el contexto y escalar
+            c2d = canvasElement.getContext('2d');
+            c2d.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+            c2d.scale(2, 2);
+
+            // Reiniciar el nivel y jugador con el nuevo tamaño
+            if (player && typeof player.reset === 'function') {
+                player.reset({ canvasW, canvasH });
+            }
+
             gameLoopId = requestAnimationFrame(mainLoop);
         };
         backgroundImgElement.onerror = (error) => {
@@ -278,13 +297,19 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     };
 
     const renderBackground = () => {
-        c2d.drawImage(backgroundImgElement, 0, 0);
+        c2d.drawImage(
+            backgroundImgElement,
+            0, 0,
+            canvasElement.width, canvasElement.height,
+            0, 0,
+            canvasElement.width, canvasElement.height
+        );
     };
 
     const updateStats = (tFrame) => {
         if (tFrame - lastStatsUpdateTime > 1000) {
             if (statsElement) {
-                statsElement.innerText = 'Lives: ' + player.lives + ' | Points: ' + player.points + ' | ' + clearedPercentage + '% | Time: ' + remainingTime;
+                statsElement.innerText = 'Lives: ' + player.lives + ' | ' + clearedPercentage + '% | Time: ' + remainingTime;
             }
             lastStatsUpdateTime = tFrame;
         }
