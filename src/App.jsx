@@ -5,15 +5,17 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Larvs Panic - React Version</h1>
+        <h1>Minigame Arcade - React Version</h1>
       </header>
       <main>
         <GameCanvas />
       </main>
       <footer>
         <p>
-          Controles: Flechas para mover, Espacio para dibujar líneas.
-          Objetivo: Captura al menos el 80% del área para ganar.
+          Controles: Flechas para mover  <code>↑ ↓ → ←</code>
+        </p>
+        <p>
+          <code>Tecla Espacio</code> para dibujar líneas.
         </p>
       </footer>
     </div>

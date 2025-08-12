@@ -19,7 +19,7 @@ const GameCanvas = () => {
     const [playMusic, setPlayMusic] = useState(true);
     const [gameInitialized, setGameInitialized] = useState(false);
     const [error, setError] = useState(null);
-    
+
     useEffect(() => {
         // Función para cargar scripts externos necesarios
         const loadScript = (src) => {
@@ -34,7 +34,7 @@ const GameCanvas = () => {
                 document.head.appendChild(script);
             });
         };
-        
+
         // Cargar FPSMeter si no está disponible
         const loadDependencies = async () => {
             try {
@@ -42,7 +42,7 @@ const GameCanvas = () => {
                     console.log("FPSMeter not found, loading from CDN...");
                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/fpsmeter/0.3.1/fpsmeter.min.js');
                     console.log("FPSMeter loaded successfully, window.FPSMeter:", window.FPSMeter);
-                    
+
                     // Esperar un momento para asegurarse de que FPSMeter esté disponible globalmente
                     setTimeout(() => {
                         setGameInitialized(false); // Forzar la reinicialización
@@ -55,49 +55,49 @@ const GameCanvas = () => {
                 setError("Failed to load game dependencies. Please refresh the page.");
             }
         };
-        
+
         loadDependencies();
     }, []);
-    
+
     useEffect(() => {
         // Inicializar el juego cuando el componente se monta y FPSMeter está disponible
-        if (canvasRef.current && 
-            statsRef.current && 
-            fpsMeterRef.current && 
-            messagesRef.current && 
+        if (canvasRef.current &&
+            statsRef.current &&
+            fpsMeterRef.current &&
+            messagesRef.current &&
             !gameInitialized) {
-            
+
             // Verificar que FPSMeter está disponible
             if (typeof window.FPSMeter === 'undefined') {
                 console.log("FPSMeter not available yet, waiting...");
                 return; // Salir y esperar a que FPSMeter se cargue
             }
-            
+
             try {
                 console.log("Initializing game...");
-                
+
                 // Verificar que todos los elementos DOM existen
                 console.log("Canvas element:", canvasRef.current);
                 console.log("Stats element:", statsRef.current);
                 console.log("FPSMeter element:", fpsMeterRef.current);
                 console.log("Messages element:", messagesRef.current);
                 console.log("FPSMeter available:", window.FPSMeter);
-                
+
                 // Verificar que initGame es una función
                 if (typeof initGame !== 'function') {
                     throw new Error("initGame is not a function");
                 }
-                
+
                 const game = initGame(
                     canvasRef.current,
                     statsRef.current,
                     fpsMeterRef.current,
                     messagesRef.current
                 );
-                
+
                 console.log("Game initialized:", game);
                 setGameInitialized(true);
-                
+
                 // Limpiar cuando el componente se desmonta
                 return () => {
                     // Añadir cualquier limpieza necesaria para el juego
@@ -111,7 +111,7 @@ const GameCanvas = () => {
             }
         }
     }, [canvasRef, statsRef, fpsMeterRef, messagesRef, gameInitialized]);
-    
+
     const handleMusicToggle = (e) => {
         setPlayMusic(e.target.checked);
         // Implementaremos esta función en el motor de audio
@@ -119,7 +119,7 @@ const GameCanvas = () => {
             window.LP.audioEngine.setMusic(e.target.checked);
         }
     };
-    
+
     return (
         <div className="game-container">
             {error && (
@@ -127,26 +127,17 @@ const GameCanvas = () => {
                     {error}
                 </div>
             )}
-            
+
             <div id='header'>
                 <div id="fpsMeter" ref={fpsMeterRef} style={{ width: '10%' }}></div>
                 <div id="messages" ref={messagesRef} style={{ marginLeft: '15%', float: 'left' }}></div>
                 <div id="stats" ref={statsRef} style={{ float: 'right' }}></div>
             </div>
-            <div id="options" style={{ marginTop: '50px', float: 'left' }}>
-                <input 
-                    type="checkbox" 
-                    id="playMusic" 
-                    checked={playMusic}
-                    onChange={handleMusicToggle}
-                />
-                <label htmlFor="playMusic">Play Music</label>
-            </div>
-            <br/>
-            <canvas 
-                id="canvas" 
-                ref={canvasRef} 
-                width="1024" 
+            <br />
+            <canvas
+                id="canvas"
+                ref={canvasRef}
+                width="1024"
                 height="768"
                 style={{
                     border: '2px solid #000',

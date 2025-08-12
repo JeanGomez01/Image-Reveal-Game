@@ -23,10 +23,10 @@ const FPSMeter = window.FPSMeter;
 export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement) => {
     // Create the game engine object
     const engine = {};
-    
+
     // Store in the global namespace for access from other modules
     window.LP.engine = engine;
-    
+
     // Game state variables
     let c2d;
     let canvasH;
@@ -43,50 +43,50 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     let backgroundImgElement;
     let nextAddTimePercentage = 30;
     let gameLoopId = null;
-    
+
     // Initialize the game
     engine.init = () => {
         console.log("init!");
-        
+
         initializeCanvas(canvasElement);
-        
+
         // Asegurarse de que las funciones de inicialización existen
         if (typeof initInput === 'function') {
             initInput();
         } else {
             console.error("initInput function not found");
         }
-        
+
         if (typeof initAudioEngine === 'function') {
             initAudioEngine();
         } else {
             console.error("initAudioEngine function not found");
         }
-        
+
         try {
             // Crear el jugador con comprobación de errores
             player = createPlayer({
-                canvasW: canvasW, 
-                canvasH: canvasH, 
+                canvasW: canvasW,
+                canvasH: canvasH,
                 input: typeof getInput === 'function' ? getInput() : {}
             });
-            
+
             console.log("Player created:", player);
-            
+
             if (!player || typeof player.getEmptyMapPoints !== 'function') {
                 console.error("Player not properly initialized or missing required methods");
             }
         } catch (error) {
             console.error("Error creating player:", error);
         }
-        
+
         try {
             // Inicializar FPSMeter si está disponible
             if (typeof window.FPSMeter === 'function' && fpsMeterElement) {
                 meter = new window.FPSMeter(fpsMeterElement, {
-                    position: 'absolute', 
-                    theme: 'light', 
-                    graph: 1, 
+                    position: 'absolute',
+                    theme: 'light',
+                    graph: 1,
                     heat: 1
                 });
                 console.log("FPSMeter initialized successfully:", meter);
@@ -94,29 +94,29 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 console.warn("FPSMeter not available. window.FPSMeter:", window.FPSMeter);
                 // Crear un objeto meter simulado para evitar errores
                 meter = {
-                    tick: () => {},
-                    destroy: () => {}
+                    tick: () => { },
+                    destroy: () => { }
                 };
             }
         } catch (error) {
             console.error("Error initializing FPSMeter:", error);
             // Crear un objeto meter simulado para evitar errores
             meter = {
-                tick: () => {},
-                destroy: () => {}
+                tick: () => { },
+                destroy: () => { }
             };
         }
-        
+
         // Solo resetear el nivel si el jugador se creó correctamente
         if (player) {
             resetLevel();
         }
-        
+
         // Reproducir música si el motor de audio está disponible
         if (window.LP && window.LP.audioEngine) {
             window.LP.audioEngine.trigger("music-game");
         }
-        
+
         // Cargar la imagen de fondo
         backgroundImgElement = new Image();
         backgroundImgElement.onload = () => {
@@ -128,19 +128,19 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             // Iniciar el bucle del juego incluso si la imagen falla
             gameLoopId = requestAnimationFrame(mainLoop);
         };
-        backgroundImgElement.src = "http://lh3.ggpht.com/-2iOwRLn7L2o/R-AmdcBZ2EI/AAAAAAAAAOY/f2T1ClJMoBE/Manga-image-tres-belle-fille-01263.jpg";
+        backgroundImgElement.src = "image.png";
     };
-    
+
     engine.playerDied = () => {
         console.log("Player died");
         engine.showMessage("You died :(");
         window.LP.audioEngine.trigger("game-over");
         resetLevel();
     };
-    
+
     engine.areaCleared = (percentage) => {
         clearedPercentage += percentage;
-        
+
         if (clearedPercentage >= 80) {
             console.log("Win!");
             engine.showMessage("You win!");
@@ -149,7 +149,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             }
             resetLevel();
         }
-        
+
         if (clearedPercentage >= nextAddTimePercentage) {
             remainingTime += 30;
             nextAddTimePercentage += 10; // We add time each 10 now
@@ -159,31 +159,31 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             }
             console.log("Extra time added");
         }
-        
+
         // Solo verificar enemigos encerrados si el jugador está inicializado
         if (player) {
             verifyEnclosedEnemies();
         }
     };
-    
+
     engine.showMessage = (message) => {
         if (messagesElement) {
             messagesElement.innerText = message;
-            
+
             if (messageTimeoutHandle) clearTimeout(messageTimeoutHandle);
             messageTimeoutHandle = setTimeout(() => {
                 messagesElement.innerText = '';
             }, 3 * 1000);
         }
     };
-    
+
     // Private functions
     const initializeCanvas = (canvas) => {
         c2d = canvas.getContext('2d');
         c2d.lineWidth = 1;
         c2d.globalAlpha = 1;
         c2d.globalCompositeOperation = 'source-over';
-        
+
         // We do a little trick here to double everything, we create a normal canvas but tell the game its dimension is half the real one
         // then we scale everything to the double. That way we have bigger objects without changing the game logic.
         canvasW = canvas.width / 2;
@@ -191,11 +191,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         c2d.scale(2, 2);
         console.log('canvas initialized');
     };
-    
+
     const resetLevel = () => {
         enemies = [];
         clearedPercentage = 0;
-        
+
         // Verificar que el jugador existe antes de llamar a reset
         if (player && typeof player.reset === 'function') {
             player.reset();
@@ -203,21 +203,21 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             console.error("Player not initialized or missing reset method");
             return; // Salir si no hay jugador
         }
-        
+
         remainingTime = 180;
-        
+
         const enemyOptions = {
             canvasW: canvasW,
             canvasH: canvasH,
             player: player
         };
-        
+
         // Verificar que las funciones de creación de enemigos existen
         try {
             if (typeof createCircleEnemy === 'function') {
                 enemies.push(createCircleEnemy(enemyOptions));
             }
-            
+
             if (typeof createCircleBumper === 'function') {
                 enemies.push(createCircleBumper(enemyOptions));
                 enemies.push(createCircleBumper(enemyOptions));
@@ -226,20 +226,20 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             console.error("Error creating enemies:", error);
         }
     };
-    
+
     const mainLoop = (tFrame) => {
         update(tFrame);
         render();
         gameLoopId = requestAnimationFrame(mainLoop);
     };
-    
+
     const update = (tFrame) => {
         updateStats(tFrame);
-        
+
         if (tFrame - lastRemaningTimeFrameTime > 1000) {
             --remainingTime;
             lastRemaningTimeFrameTime = tFrame;
-            
+
             if (remainingTime === 0) {
                 engine.playerDied();
             } else if (remainingTime === 30) {
@@ -247,40 +247,40 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 window.LP.audioEngine.trigger("hurry");
             }
         }
-        
+
         for (let i = enemies.length - 1; i >= 0; i--) {
             enemies[i].update(tFrame, tFrame - lastFrameTime);
         }
-        
+
         player.update(tFrame, tFrame - lastFrameTime);
-        
+
         lastFrameTime = tFrame;
     };
-    
+
     const render = () => {
         renderBackground();
-        
+
         player.render(c2d);
-        
+
         for (let i = enemies.length - 1; i >= 0; i--) {
             if (!enemies[i].alive) {
                 enemies.splice(i, 1);
                 continue;
             }
-            
+
             enemies[i].render(c2d);
         }
-        
+
         // Verificar que meter existe antes de llamar a tick()
         if (meter && typeof meter.tick === 'function') {
             meter.tick();
         }
     };
-    
+
     const renderBackground = () => {
         c2d.drawImage(backgroundImgElement, 0, 0);
     };
-    
+
     const updateStats = (tFrame) => {
         if (tFrame - lastStatsUpdateTime > 1000) {
             if (statsElement) {
@@ -289,14 +289,14 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             lastStatsUpdateTime = tFrame;
         }
     };
-    
+
     const verifyEnclosedEnemies = () => {
         // Verificar que player existe y tiene el método getEmptyMapPoints
         if (!player || typeof player.getEmptyMapPoints !== 'function') {
             console.warn('Player not initialized or missing getEmptyMapPoints method');
             return;
         }
-        
+
         const emptyPoints = player.getEmptyMapPoints();
         for (let i = enemies.length - 1; i >= 0; i--) {
             if (helpers.isCollidingPoints(enemies[i].getHitbox(), emptyPoints)) {
@@ -305,7 +305,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             }
         }
     };
-    
+
     // Cleanup function for React component unmounting
     engine.cleanup = () => {
         // Detener el bucle del juego
@@ -313,13 +313,13 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             cancelAnimationFrame(gameLoopId);
             gameLoopId = null;
         }
-        
+
         // Limpiar el timeout de mensajes
         if (messageTimeoutHandle) {
             clearTimeout(messageTimeoutHandle);
             messageTimeoutHandle = null;
         }
-        
+
         // Destruir el medidor FPS si existe
         if (meter && typeof meter.destroy === 'function') {
             try {
@@ -329,12 +329,12 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 console.error("Error destroying FPSMeter:", error);
             }
         }
-        
+
         console.log("Game engine cleaned up");
     };
-    
+
     // Initialize the game
     engine.init();
-    
+
     return engine;
 };
