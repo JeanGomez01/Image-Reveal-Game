@@ -22,6 +22,9 @@ export const createPlayer = (options, myProps = {}) => {
     // Player specific properties
     that.lives = options.lives || 3;
     that.points = 0;
+    
+    // Movement direction tracking (for restricting diagonal movement)
+    let currentMoveDirection = null; // 'horizontal', 'vertical', or null
 
     // Input reference
     const input = options.input;
@@ -38,19 +41,22 @@ export const createPlayer = (options, myProps = {}) => {
     // Verificar que canvasW y canvasH son valores válidos
     if (!that.canvasW || isNaN(that.canvasW) || that.canvasW <= 0) {
         console.error("Invalid canvasW value:", that.canvasW);
-        that.canvasW = 512; // Valor predeterminado
+        that.canvasW = 300; // Valor predeterminado ajustado para 600x600
     }
 
     if (!that.canvasH || isNaN(that.canvasH) || that.canvasH <= 0) {
         console.error("Invalid canvasH value:", that.canvasH);
-        that.canvasH = 384; // Valor predeterminado
+        that.canvasH = 300; // Valor predeterminado ajustado para 600x600
     }
 
     console.log("Initializing player with canvas dimensions:", that.canvasW, "x", that.canvasH);
 
     const playerCanvas = createCanvas(that.canvasW, that.canvasH);
     const ctxPlayer = playerCanvas.getContext('2d');
-    const map = new Array(that.canvasW * that.canvasH);
+    
+    // Asegurarse de que el tamaño del mapa sea correcto
+    const mapSize = that.canvasW * that.canvasH;
+    const map = new Array(mapSize);
 
     // Inicializar el mapa con valores predeterminados
     for (let i = 0; i < map.length; i++) {
@@ -59,13 +65,26 @@ export const createPlayer = (options, myProps = {}) => {
 
     let imgData;
     try {
-        // Obtener los datos de imagen
+        // Obtener los datos de imagen con el tamaño correcto
         imgData = ctxPlayer.getImageData(0, 0, that.canvasW, that.canvasH);
+        
+        // Verificar que el tamaño de imgData.data es correcto (4 bytes por pixel)
+        if (imgData.data.length !== mapSize * 4) {
+            console.error("imgData size mismatch:", imgData.data.length, "expected:", mapSize * 4);
+            // Crear un nuevo imgData con el tamaño correcto
+            imgData = {
+                data: new Uint8ClampedArray(mapSize * 4),
+                width: that.canvasW,
+                height: that.canvasH
+            };
+        }
     } catch (error) {
         console.error("Error getting image data:", error);
-        // Crear un imgData vacío como fallback
+        // Crear un imgData vacío como fallback con el tamaño correcto
         imgData = {
-            data: new Uint8ClampedArray(that.canvasW * that.canvasH * 4)
+            data: new Uint8ClampedArray(mapSize * 4),
+            width: that.canvasW,
+            height: that.canvasH
         };
     }
 
@@ -88,27 +107,58 @@ export const createPlayer = (options, myProps = {}) => {
         that.previousX = that.x;
         that.previousY = that.y;
 
-        // Handle input
-        if (input.left && that.x > 0) {
-            that.x = Math.max(0, that.x - that.speed);
+        // Determinar la dirección de movimiento basada en las teclas presionadas
+        let wantsToMoveHorizontal = input.left || input.right;
+        let wantsToMoveVertical = input.up || input.down;
+        
+        // Si no hay dirección actual y el jugador quiere moverse en ambas direcciones,
+        // priorizar el movimiento horizontal
+        if (currentMoveDirection === null) {
+            if (wantsToMoveHorizontal) {
+                currentMoveDirection = 'horizontal';
+            } else if (wantsToMoveVertical) {
+                currentMoveDirection = 'vertical';
+            }
+        } 
+        // Si el jugador deja de presionar teclas en la dirección actual, permitir cambiar de dirección
+        else if ((currentMoveDirection === 'horizontal' && !wantsToMoveHorizontal) ||
+                 (currentMoveDirection === 'vertical' && !wantsToMoveVertical)) {
+            if (wantsToMoveHorizontal) {
+                currentMoveDirection = 'horizontal';
+            } else if (wantsToMoveVertical) {
+                currentMoveDirection = 'vertical';
+            } else {
+                currentMoveDirection = null; // No se está moviendo
+            }
         }
 
-        if (input.right && that.x < that.canvasW) {
-            that.x = Math.min(that.canvasW, that.x + that.speed);
-        }
-
-        if (input.up && that.y > 0) {
-            that.y = Math.max(0, that.y - that.speed);
-        }
-
-        if (input.down && that.y < that.canvasH) {
-            that.y = Math.min(that.canvasH, that.y + that.speed);
+        // Aplicar movimiento según la dirección actual
+        if (currentMoveDirection === 'horizontal') {
+            // Solo permitir movimiento horizontal
+            if (input.left && that.x > 0) {
+                that.x = Math.max(0, that.x - that.speed);
+            }
+            if (input.right && that.x < that.canvasW) {
+                that.x = Math.min(that.canvasW, that.x + that.speed);
+            }
+        } else if (currentMoveDirection === 'vertical') {
+            // Solo permitir movimiento vertical
+            if (input.up && that.y > 0) {
+                that.y = Math.max(0, that.y - that.speed);
+            }
+            if (input.down && that.y < that.canvasH) {
+                that.y = Math.min(that.canvasH, that.y + that.speed);
+            }
         }
 
         isFiring = input.fire;
 
-        const previousPoint = map[that.previousX + that.canvasW * that.previousY];
-        const currentPoint = map[that.x + that.canvasW * that.y];
+        // Asegurarse de que los índices estén dentro de los límites
+        const prevIndex = Math.min(Math.floor(that.previousY) * that.canvasW + Math.floor(that.previousX), map.length - 1);
+        const currIndex = Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1);
+        
+        const previousPoint = map[prevIndex];
+        const currentPoint = map[currIndex];
 
         // If it's firing we update the path, otherwise he can't move outside
         if (isFiring) {
@@ -161,14 +211,14 @@ export const createPlayer = (options, myProps = {}) => {
 
                     // Bug handling
                     if (zone1 === 0 || zone2 === 0) {
-                        map[that.y * that.canvasW + that.x] = 'X';
+                        map[Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1)] = 'X';
 
                         // Debug output
                         for (let i = 0; i < map.length; i += that.canvasW) {
                             that.log(map.slice(i, i + that.canvasW).join(""));
                         }
 
-                        map[that.y * that.canvasW + that.x] = 'P';
+                        map[Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1)] = 'P';
 
                         replaceValuesInMap('1', 'F');
                         replaceValuesInMap('2', 'F');
@@ -201,7 +251,9 @@ export const createPlayer = (options, myProps = {}) => {
                 }
             } else {
                 // We are just drawing
-                map[that.x + that.canvasW * that.y] = 'T';
+                // Asegurarse de que el índice esté dentro de los límites
+                const safeIndex = Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1);
+                map[safeIndex] = 'T';
                 clearMapPointsCache();
             }
         } else if (currentPoint === 'P') {
@@ -293,8 +345,75 @@ export const createPlayer = (options, myProps = {}) => {
 
         that.lives = 3;
         haveJustDied = false;
+        currentMoveDirection = null; // Resetear la dirección de movimiento
 
-        generateRandomClearedZone();
+        // En lugar de generar una zona aleatoria, crear un borde limpio alrededor de toda la imagen
+        createBorderPath();
+    };
+
+    // Crear un borde limpio alrededor de toda la imagen
+    const createBorderPath = () => {
+        const borderWidth = 1; // Ancho del borde en píxeles
+        let pixelsCleared = 0;
+
+        // Limpiar los bordes (crear un marco limpio)
+        for (let x = 0; x < that.canvasW; x++) {
+            for (let y = 0; y < that.canvasH; y++) {
+                // Si el pixel está en el borde (dentro del ancho especificado)
+                if (x < borderWidth || x >= that.canvasW - borderWidth || 
+                    y < borderWidth || y >= that.canvasH - borderWidth) {
+                    
+                    const index = y * that.canvasW + x;
+                    if (index >= 0 && index < map.length) {
+                        map[index] = 'E'; // Marcar como vacío
+                        pixelsCleared++;
+                    }
+                }
+            }
+        }
+
+        // Crear el camino (path) en el borde interior
+        for (let x = borderWidth; x < that.canvasW - borderWidth; x++) {
+            // Borde superior e inferior
+            const topIndex = borderWidth * that.canvasW + x;
+            const bottomIndex = (that.canvasH - borderWidth - 1) * that.canvasW + x;
+            
+            if (topIndex >= 0 && topIndex < map.length) {
+                map[topIndex] = 'P';
+            }
+            
+            if (bottomIndex >= 0 && bottomIndex < map.length) {
+                map[bottomIndex] = 'P';
+            }
+        }
+        
+        for (let y = borderWidth; y < that.canvasH - borderWidth; y++) {
+            // Borde izquierdo y derecho
+            const leftIndex = y * that.canvasW + borderWidth;
+            const rightIndex = y * that.canvasW + (that.canvasW - borderWidth - 1);
+            
+            if (leftIndex >= 0 && leftIndex < map.length) {
+                map[leftIndex] = 'P';
+            }
+            
+            if (rightIndex >= 0 && rightIndex < map.length) {
+                map[rightIndex] = 'P';
+            }
+        }
+
+        // Colocar al jugador en la esquina inferior derecha
+        that.x = that.canvasW - borderWidth - 1;
+        that.y = that.canvasH - borderWidth - 1;
+        lastPathX = that.x;
+        lastPathY = that.y;
+
+        clearMapPointsCache();
+
+        // Notificar al motor sobre el área limpiada
+        if (window.LP && window.LP.engine) {
+            const percentageCleared = Math.round(pixelsCleared / map.length * 100);
+            window.LP.engine.areaCleared(percentageCleared);
+        }
     };
 
     // Check if an enemy is colliding with the path
@@ -347,6 +466,7 @@ export const createPlayer = (options, myProps = {}) => {
             }
 
             const data = imgData.data;
+            const dataLength = data.length;
 
             // Verificar que map existe y tiene elementos
             if (!map || !Array.isArray(map) || map.length === 0) {
@@ -354,78 +474,53 @@ export const createPlayer = (options, myProps = {}) => {
                 return;
             }
 
-            for (let i = map.length - 1; i >= 0; i--) {
+            for (let i = 0; i < map.length; i++) {
                 // Verificar que el índice es válido para data
-                if (i * 4 + 3 >= data.length) {
-                    console.error("Index out of bounds for imgData.data:", i * 4 + 3, "length:", data.length);
+                const pixelIndex = i * 4;
+                if (pixelIndex + 3 >= dataLength) {
+                    // Saltarse este pixel si está fuera de los límites
                     continue;
                 }
 
                 switch (map[i]) {
                     case 'E': // Empty
-                        data[i * 4 + 3] = 0; // Transparent
+                        data[pixelIndex + 3] = 0; // Transparent
                         break;
                     case 'F': // Filled
-                        data[i * 4] = 0; // Dark Blue, 100% opaque
-                        data[i * 4 + 1] = 0;
-                        data[i * 4 + 2] = 100;
-                        data[i * 4 + 3] = 255;
+                        data[pixelIndex] = 0; // Dark Blue, 100% opaque
+                        data[pixelIndex + 1] = 0;
+                        data[pixelIndex + 2] = 100;
+                        data[pixelIndex + 3] = 255;
                         break;
                     case 'P': // Path
-                        data[i * 4] = 255; // White, 100% opaque
-                        data[i * 4 + 1] = 255;
-                        data[i * 4 + 2] = 255;
-                        data[i * 4 + 3] = 255;
+                        data[pixelIndex] = 255; // White, 100% opaque
+                        data[pixelIndex + 1] = 255;
+                        data[pixelIndex + 2] = 255;
+                        data[pixelIndex + 3] = 255;
                         break;
                     case 'T': // Temporal path
-                        data[i * 4] = 0; // Green, 100% opaque
-                        data[i * 4 + 1] = 255;
-                        data[i * 4 + 2] = 0;
-                        data[i * 4 + 3] = 255;
+                        data[pixelIndex] = 0; // Green, 100% opaque
+                        data[pixelIndex + 1] = 255;
+                        data[pixelIndex + 2] = 0;
+                        data[pixelIndex + 3] = 255;
                         break;
                     default:
                         // Para cualquier otro valor, usar un color predeterminado
-                        data[i * 4] = 128; // Gris, 100% opaque
-                        data[i * 4 + 1] = 128;
-                        data[i * 4 + 2] = 128;
-                        data[i * 4 + 3] = 255;
+                        data[pixelIndex] = 128; // Gris, 100% opaque
+                        data[pixelIndex + 1] = 128;
+                        data[pixelIndex + 2] = 128;
+                        data[pixelIndex + 3] = 255;
                 }
             }
 
             // Actualizar el canvas con los datos de imagen
-            ctxPlayer.putImageData(imgData, 0, 0);
+            try {
+                ctxPlayer.putImageData(imgData, 0, 0);
+            } catch (error) {
+                console.error("Error putting image data:", error);
+            }
         } catch (error) {
             console.error("Error in updatePlayerCanvasFromMap:", error);
-        }
-    };
-
-    // Generate a random cleared zone
-    const generateRandomClearedZone = () => {
-        // Generate a random cleared zone of a random width and height between 2 and 15% of the canvas dimensions
-        const width = Math.floor(that.canvasW * math.getRandomArbitrary(0.02, 0.15));
-        const height = Math.floor(that.canvasH * math.getRandomArbitrary(0.02, 0.15));
-        const x = math.getRandomInt(0, that.canvasW - that.radius);
-        const y = math.getRandomInt(0, that.canvasH - that.radius);
-        let pixelsCleared = 0;
-
-        that.log("generateRandomClearedZone", x, y, width, height);
-
-        for (let xIndex = x; xIndex < x + width; xIndex++) {
-            for (let yIndex = y; yIndex < y + height; yIndex++) {
-                map[yIndex * that.canvasW + xIndex] = 'E';
-                ++pixelsCleared;
-            }
-        }
-
-        strokeAreaEdges(map, that.canvasW, 'E', 'P');
-
-        that.x = x;
-        that.y = y;
-        lastPathX = that.x;
-        lastPathY = that.y;
-
-        if (window.LP && window.LP.engine) {
-            window.LP.engine.areaCleared(Math.round(pixelsCleared / map.length * 100));
         }
     };
 
@@ -436,18 +531,38 @@ export const createPlayer = (options, myProps = {}) => {
 
         while (pixelStack.length > 0) {
             const current = pixelStack.pop();
+            
+            // Verificar que las coordenadas están dentro de los límites
+            if (current.x < 0 || current.x >= mapWidth || 
+                current.y < 0 || current.y >= mapData.length / mapWidth) {
+                continue;
+            }
+            
             const index = current.y * mapWidth + current.x;
+            
+            // Verificar que el índice está dentro de los límites
+            if (index < 0 || index >= mapData.length) {
+                continue;
+            }
 
             if (mapData[index] !== oldVal) continue;
 
             mapData[index] = newVal;
             pixelsFilled++;
 
-            // We don't bother checking limits, undefined will be different from oldVal
-            pixelStack.push({ x: current.x + 1, y: current.y }); // right
-            pixelStack.push({ x: current.x - 1, y: current.y }); // left
-            pixelStack.push({ x: current.x, y: current.y + 1 }); // up
-            pixelStack.push({ x: current.x, y: current.y - 1 }); // down
+            // Verificar límites antes de añadir a la pila
+            if (current.x + 1 < mapWidth) {
+                pixelStack.push({ x: current.x + 1, y: current.y }); // right
+            }
+            if (current.x - 1 >= 0) {
+                pixelStack.push({ x: current.x - 1, y: current.y }); // left
+            }
+            if (current.y + 1 < mapData.length / mapWidth) {
+                pixelStack.push({ x: current.x, y: current.y + 1 }); // down
+            }
+            if (current.y - 1 >= 0) {
+                pixelStack.push({ x: current.x, y: current.y - 1 }); // up
+            }
         }
 
         clearMapPointsCache();
@@ -460,25 +575,31 @@ export const createPlayer = (options, myProps = {}) => {
         let y = 0;
         let left, top, right, bottom, topLeft, topRight, bottomLeft, bottomRight;
         const pixelStack = [];
-        const mapHeight = mapData.length / mapWidth;
+        const mapHeight = Math.floor(mapData.length / mapWidth);
 
         for (y = 0; y < mapHeight; y++) {
             for (x = 0; x < mapWidth; x++) {
                 const index = (x + y * mapWidth);
+                
+                // Verificar que el índice está dentro de los límites
+                if (index < 0 || index >= mapData.length) {
+                    continue;
+                }
+                
                 const pixel = mapData[index];
 
                 // We want to detect edges from the area with innerVal to the outside
                 if (pixel !== innerVal) continue;
 
-                // Get the values of the eight surrounding pixels
-                left = mapData[index - 1];
-                right = mapData[index + 1];
-                top = mapData[index - mapWidth];
-                bottom = mapData[index + mapWidth];
-                topLeft = mapData[index - mapWidth - 1];
-                topRight = mapData[index - mapWidth + 1];
-                bottomLeft = mapData[index + mapWidth - 1];
-                bottomRight = mapData[index + mapWidth + 1];
+                // Get the values of the eight surrounding pixels with verificación de límites
+                left = x > 0 ? mapData[index - 1] : null;
+                right = x < mapWidth - 1 ? mapData[index + 1] : null;
+                top = y > 0 ? mapData[index - mapWidth] : null;
+                bottom = y < mapHeight - 1 ? mapData[index + mapWidth] : null;
+                topLeft = (x > 0 && y > 0) ? mapData[index - mapWidth - 1] : null;
+                topRight = (x < mapWidth - 1 && y > 0) ? mapData[index - mapWidth + 1] : null;
+                bottomLeft = (x > 0 && y < mapHeight - 1) ? mapData[index + mapWidth - 1] : null;
+                bottomRight = (x < mapWidth - 1 && y < mapHeight - 1) ? mapData[index + mapWidth + 1] : null;
 
                 // Compare it all and save pixels to modify later
                 if (pixel !== left || pixel !== right || pixel !== top || pixel !== bottom ||
@@ -489,8 +610,11 @@ export const createPlayer = (options, myProps = {}) => {
         }
 
         // We finally stroke (paint) the borders
-        for (let i = pixelStack.length - 1; i >= 0; i--) {
-            mapData[pixelStack[i]] = borderVal;
+        for (let i = 0; i < pixelStack.length; i++) {
+            const index = pixelStack[i];
+            if (index >= 0 && index < mapData.length) {
+                mapData[index] = borderVal;
+            }
         }
 
         clearMapPointsCache();
@@ -521,7 +645,7 @@ export const createPlayer = (options, myProps = {}) => {
         }
 
         try {
-            for (let i = map.length - 1; i >= 0; i--) {
+            for (let i = 0; i < map.length; i++) {
                 if (map[i] === type) {
                     const y = Math.floor(i / that.canvasW);
                     const x = i % that.canvasW;
@@ -544,6 +668,7 @@ export const createPlayer = (options, myProps = {}) => {
         replaceValuesInMap('T', 'F');
         that.x = lastPathX;
         that.y = lastPathY;
+        currentMoveDirection = null; // Resetear la dirección de movimiento al respawn
     };
 
     // Add points based on area cleared

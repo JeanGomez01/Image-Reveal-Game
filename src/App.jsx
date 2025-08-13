@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Minigame Arcade - React Version</h1>
+        <h1>Image Reveal Game</h1>
       </header>
       <main>
         <GameCanvas />

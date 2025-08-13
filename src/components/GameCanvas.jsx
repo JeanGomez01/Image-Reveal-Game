@@ -137,13 +137,15 @@ const GameCanvas = () => {
             <canvas
                 id="canvas"
                 ref={canvasRef}
-                width="1024"
-                height="768"
+                width="600"
+                height="600"
                 style={{
                     border: '2px solid #000',
                     position: 'absolute',
-                    left: '25%',
-                    marginLeft: '10px'
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    marginTop: '10px',
+                    clipPath: 'inset(3px)'
                 }}
             />
         </div>

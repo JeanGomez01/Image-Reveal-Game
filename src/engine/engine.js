@@ -122,13 +122,13 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         // Cargar la imagen de fondo
         backgroundImgElement = new Image();
         backgroundImgElement.onload = () => {
-            // Ajustar el tamaño del canvas al de la imagen
-            canvasElement.width = backgroundImgElement.width;
-            canvasElement.height = backgroundImgElement.height;
+            // Mantener el canvas en 600x600 (1:1 ratio)
+            canvasElement.width = 600;
+            canvasElement.height = 600;
 
             // Actualizar variables globales
-            canvasW = backgroundImgElement.width / 2;
-            canvasH = backgroundImgElement.height / 2;
+            canvasW = canvasElement.width / 2;
+            canvasH = canvasElement.height / 2;
 
             // Volver a inicializar el contexto y escalar
             c2d = canvasElement.getContext('2d');
@@ -147,7 +147,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             // Iniciar el bucle del juego incluso si la imagen falla
             gameLoopId = requestAnimationFrame(mainLoop);
         };
-        backgroundImgElement.src = "image.png";
+        backgroundImgElement.src = "image2.png";
     };
 
     engine.playerDied = () => {
@@ -297,35 +297,27 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     };
 
     const renderBackground = () => {
-        // Tamaño del canvas
-        const cw = canvasElement.width;
-        const ch = canvasElement.height;
-
-        // Tamaño de la imagen
-        const iw = backgroundImgElement.width;
-        const ih = backgroundImgElement.height;
-
-        // Calcular el área de la imagen que mantiene el ratio del canvas
-        const canvasRatio = cw / ch;
-        const imageRatio = iw / ih;
-
-        let sx, sy, sw, sh;
-        if (imageRatio > canvasRatio) {
-            // Imagen más ancha que el canvas: recortar lados
-            sh = ih;
-            sw = ih * canvasRatio;
-            sx = (iw - sw) / 2;
-            sy = 0;
-        } else {
-            // Imagen más alta que el canvas: recortar arriba/abajo
-            sw = iw;
-            sh = iw / canvasRatio;
-            sx = 0;
-            sy = (ih - sh) / 2;
+        // Procesar la imagen para asegurar un ratio 1:1
+        const img = backgroundImgElement;
+        
+        if (!img || !img.complete) {
+            // Si la imagen no está cargada, dibuja un fondo de color
+            c2d.fillStyle = '#000000';
+            c2d.fillRect(0, 0, canvasW, canvasH);
+            return;
         }
 
-        // Dibujar la imagen recortada y escalada al canvas
-        c2d.drawImage(backgroundImgElement, sx, sy, sw, sh, 0, 0, cw, ch);
+        // Determinar qué parte de la imagen usar para mantener ratio 1:1
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width - size) / 2;
+        const sy = (img.height - size) / 2;
+        
+        // Dibujar la imagen recortada para mantener ratio 1:1
+        c2d.drawImage(
+            img,
+            sx, sy, size, size,  // Recortar la imagen a un cuadrado
+            0, 0, canvasW, canvasH  // Dibujar en todo el canvas
+        );
     };
 
     const updateStats = (tFrame) => {

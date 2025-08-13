@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Reveal Game Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .game-container {
+            position: relative;
+            width: 600px;
+            margin: 20px auto;
+        }
+        canvas {
+            display: block;
+            border: 2px solid #000;
+            margin: 0 auto;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Reveal Game Test</h1>
+        
+        <div class="game-container">
+            <div id="header">
+                <div id="fpsMeter" style="width: 10%"></div>
+                <div id="messages" style="margin-left: 15%; float: left"></div>
+                <div id="stats" style="float: right"></div>
+            </div>
+            <br>
+            <canvas id="canvas" width="600" height="600"></canvas>
+        </div>
+        
+        <div class="controls">
+            <p>Use arrow keys to move and space to create lines</p>
+        </div>
+        
+        <div class="info">
+            <h3>Updates Made:</h3>
+            <ul>
+                <li>Canvas size changed to 600x600 (1:1 ratio)</li>
+                <li>Image processing to ensure 1:1 ratio</li>
+                <li>Improved image rendering with proper cropping</li>
+                <li>Centered canvas in the game container</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // This is just a test page - the actual game runs through the React app
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Draw a message on the canvas
+            ctx.fillStyle = '#333';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('The game runs through the React app', 300, 280);
+            ctx.fillText('Use "npm run dev" to start the game', 300, 320);
+            
+            // Draw the image with 1:1 ratio
+            const img = new Image();
+            img.onload = function() {
+                // Determine what part of the image to use for 1:1 ratio
+                const size = Math.min(img.width, img.height);
+                const sx = (img.width - size) / 2;
+                const sy = (img.height - size) / 2;
+                
+                // Draw the image maintaining 1:1 ratio
+                ctx.globalAlpha = 0.3; // Make it semi-transparent to show the text
+                ctx.drawImage(
+                    img,
+                    sx, sy, size, size,  // Source rectangle (cropped to square)
+                    0, 0, canvas.width, canvas.height  // Destination rectangle
+                );
+                ctx.globalAlpha = 1.0;
+            };
+            img.src = 'image.png';
+        });
+    </script>
+</body>
+</html>
