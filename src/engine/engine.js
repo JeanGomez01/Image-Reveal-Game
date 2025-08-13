@@ -37,12 +37,15 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     let lastStatsUpdateTime = 0;
     let messageTimeoutHandle = null;
     let clearedPercentage = 0;
+    let totalArea = 0;
+    let filledArea = 0;
     let remainingTime = 180;
     let lastFrameTime = 0;
     let lastRemaningTimeFrameTime = 0;
     let backgroundImgElement;
     let nextAddTimePercentage = 30;
     let gameLoopId = null;
+    let gameStarted = false;
 
     // Initialize the game
     engine.init = () => {
@@ -135,19 +138,125 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             c2d.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
             c2d.scale(2, 2);
 
+            // Calcular el área total y el área inicial llena
+            totalArea = canvasW * canvasH;
+            
             // Reiniciar el nivel y jugador con el nuevo tamaño
             if (player && typeof player.reset === 'function') {
                 player.reset({ canvasW, canvasH });
             }
 
-            gameLoopId = requestAnimationFrame(mainLoop);
+            // Inicialmente no iniciamos el bucle del juego, esperamos a que el usuario presione Start
+            // gameLoopId = requestAnimationFrame(mainLoop);
+            
+            // Mostrar el menú de inicio
+            showStartMenu();
         };
         backgroundImgElement.onerror = (error) => {
             console.error("Error loading background image:", error);
             // Iniciar el bucle del juego incluso si la imagen falla
-            gameLoopId = requestAnimationFrame(mainLoop);
+            showStartMenu();
         };
-        backgroundImgElement.src = "image2.png";
+        backgroundImgElement.src = "image.png";
+    };
+
+    // Mostrar el menú de inicio
+    const showStartMenu = () => {
+        // Limpiar el canvas
+        c2d.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        c2d.fillRect(0, 0, canvasW, canvasH);
+        
+        // Dibujar el fondo del juego con opacidad reducida
+        renderBackground(0.3);
+        
+        // Dibujar el título
+        c2d.fillStyle = '#FF8800';
+        c2d.font = 'bold 16px "Press Start 2P", monospace';
+        c2d.textAlign = 'center';
+        c2d.fillText('IMAGE REVEAL', canvasW / 2, canvasH / 3);
+        
+        // Dibujar el botón de inicio
+        const btnWidth = 80;
+        const btnHeight = 30;
+        const btnX = (canvasW - btnWidth) / 2;
+        const btnY = canvasH / 2;
+        
+        // Botón con efecto de brillo
+        c2d.fillStyle = '#4CAF50';
+        c2d.fillRect(btnX, btnY, btnWidth, btnHeight);
+        c2d.fillStyle = '#2E7D32';
+        c2d.fillRect(btnX + 2, btnY + 2, btnWidth - 4, btnHeight - 4);
+        
+        // Texto del botón
+        c2d.fillStyle = '#FFFFFF';
+        c2d.font = 'bold 12px "Press Start 2P", monospace';
+        c2d.fillText('START', canvasW / 2, btnY + btnHeight / 2 + 4);
+        
+        // Instrucciones
+        c2d.fillStyle = '#FFFFFF';
+        c2d.font = '6px "Press Start 2P", monospace';
+        c2d.fillText('Use arrow keys to move', canvasW / 2, canvasH * 0.7);
+        c2d.fillText('Hold SPACE to draw', canvasW / 2, canvasH * 0.75);
+        c2d.fillText('Reveal 80% to win!', canvasW / 2, canvasH * 0.8);
+        
+        // Añadir evento de clic para iniciar el juego
+        const handleClick = (e) => {
+            // Convertir coordenadas del clic a coordenadas del canvas
+            const rect = canvasElement.getBoundingClientRect();
+            const scaleX = canvasElement.width / rect.width;
+            const scaleY = canvasElement.height / rect.height;
+            
+            const x = (e.clientX - rect.left) * scaleX / 2; // Dividir por 2 debido al scale(2, 2)
+            const y = (e.clientY - rect.top) * scaleY / 2;
+            
+            // Verificar si el clic fue en el botón
+            if (x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight) {
+                // Iniciar el juego
+                startGame();
+                // Eliminar el evento de clic
+                canvasElement.removeEventListener('click', handleClick);
+            }
+        };
+        
+        canvasElement.addEventListener('click', handleClick);
+        
+        // También permitir iniciar con la tecla Enter o Espacio
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                startGame();
+                window.removeEventListener('keydown', handleKeyDown);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+    };
+    
+    // Iniciar el juego
+    const startGame = () => {
+        if (!gameStarted) {
+            gameStarted = true;
+            // Actualizar el área inicial llena
+            updateFilledArea();
+            // Iniciar el bucle del juego
+            gameLoopId = requestAnimationFrame(mainLoop);
+            // Reproducir sonido de inicio si está disponible
+            if (window.LP && window.LP.audioEngine) {
+                window.LP.audioEngine.trigger("start-game");
+            }
+        }
+    };
+
+    // Actualizar el área llena y el porcentaje limpiado
+    const updateFilledArea = () => {
+        if (player && typeof player.getFilledMapPoints === 'function') {
+            const filledPoints = player.getFilledMapPoints();
+            filledArea = filledPoints.length;
+            
+            // Calcular el porcentaje de área limpiada
+            if (totalArea > 0) {
+                clearedPercentage = Math.round(((totalArea - filledArea) / totalArea) * 100);
+            }
+        }
     };
 
     engine.playerDied = () => {
@@ -158,7 +267,8 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     };
 
     engine.areaCleared = (percentage) => {
-        clearedPercentage += percentage;
+        // En lugar de sumar el porcentaje, actualizamos el área llena y recalculamos
+        updateFilledArea();
 
         if (clearedPercentage >= 80) {
             console.log("Win!");
@@ -214,6 +324,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     const resetLevel = () => {
         enemies = [];
         clearedPercentage = 0;
+        nextAddTimePercentage = 30;
 
         // Verificar que el jugador existe antes de llamar a reset
         if (player && typeof player.reset === 'function') {
@@ -244,6 +355,9 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         } catch (error) {
             console.error("Error creating enemies:", error);
         }
+        
+        // Actualizar el área llena después de resetear
+        updateFilledArea();
     };
 
     const mainLoop = (tFrame) => {
@@ -272,12 +386,17 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
 
         player.update(tFrame, tFrame - lastFrameTime);
+        
+        // Actualizar el área llena y el porcentaje cada cierto tiempo
+        if (tFrame - lastStatsUpdateTime > 1000) {
+            updateFilledArea();
+        }
 
         lastFrameTime = tFrame;
     };
 
     const render = () => {
-        renderBackground();
+        renderBackground(1.0);
 
         player.render(c2d);
 
@@ -296,7 +415,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
     };
 
-    const renderBackground = () => {
+    const renderBackground = (opacity = 1.0) => {
         // Procesar la imagen para asegurar un ratio 1:1
         const img = backgroundImgElement;
         
@@ -306,6 +425,12 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             c2d.fillRect(0, 0, canvasW, canvasH);
             return;
         }
+
+        // Guardar el estado actual del contexto
+        c2d.save();
+        
+        // Establecer la opacidad
+        c2d.globalAlpha = opacity;
 
         // Determinar qué parte de la imagen usar para mantener ratio 1:1
         const size = Math.min(img.width, img.height);
@@ -318,6 +443,9 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             sx, sy, size, size,  // Recortar la imagen a un cuadrado
             0, 0, canvasW, canvasH  // Dibujar en todo el canvas
         );
+        
+        // Restaurar el estado del contexto
+        c2d.restore();
     };
 
     const updateStats = (tFrame) => {

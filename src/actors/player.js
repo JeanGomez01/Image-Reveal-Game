@@ -353,7 +353,7 @@ export const createPlayer = (options, myProps = {}) => {
 
     // Crear un borde limpio alrededor de toda la imagen
     const createBorderPath = () => {
-        const borderWidth = 1; // Ancho del borde en píxeles
+        const borderWidth = 0; // Ancho del borde en píxeles
         let pixelsCleared = 0;
 
         // Limpiar los bordes (crear un marco limpio)

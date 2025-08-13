@@ -21,6 +21,14 @@ const GameCanvas = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        // Cargar la fuente "Press Start 2P" para el estilo retro
+        const loadRetroFont = () => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap';
+            document.head.appendChild(link);
+        };
+
         // Función para cargar scripts externos necesarios
         const loadScript = (src) => {
             return new Promise((resolve, reject) => {
@@ -38,6 +46,9 @@ const GameCanvas = () => {
         // Cargar FPSMeter si no está disponible
         const loadDependencies = async () => {
             try {
+                // Cargar la fuente retro
+                loadRetroFont();
+                
                 if (typeof window.FPSMeter === 'undefined') {
                     console.log("FPSMeter not found, loading from CDN...");
                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/fpsmeter/0.3.1/fpsmeter.min.js');
@@ -128,26 +139,45 @@ const GameCanvas = () => {
                 </div>
             )}
 
-            <div id='header'>
-                <div id="fpsMeter" ref={fpsMeterRef} style={{ width: '10%' }}></div>
-                <div id="messages" ref={messagesRef} style={{ marginLeft: '15%', float: 'left' }}></div>
-                <div id="stats" ref={statsRef} style={{ float: 'right' }}></div>
+            <div className="game-header">
+                <h1 className="game-title">Image Reveal</h1>
+                <div className="game-controls">
+                    <label className="music-toggle">
+                        <input 
+                            type="checkbox" 
+                            checked={playMusic} 
+                            onChange={handleMusicToggle}
+                        />
+                        <span>Music</span>
+                    </label>
+                </div>
             </div>
-            <br />
-            <canvas
-                id="canvas"
-                ref={canvasRef}
-                width="600"
-                height="600"
-                style={{
-                    border: '2px solid #000',
-                    position: 'absolute',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    marginTop: '10px',
-                    clipPath: 'inset(3px)'
-                }}
-            />
+
+            <div className="game-stats-container">
+                <div id="fpsMeter" ref={fpsMeterRef} className="fps-meter"></div>
+                <div id="messages" ref={messagesRef} className="game-messages"></div>
+                <div id="stats" ref={statsRef} className="game-stats"></div>
+            </div>
+
+            <div className="canvas-container">
+                <canvas
+                    id="canvas"
+                    ref={canvasRef}
+                    width="600"
+                    height="600"
+                    className="game-canvas"
+                />
+            </div>
+
+            <div className="game-instructions">
+                <h3>How to Play:</h3>
+                <ul>
+                    <li>Use <span className="key">↑</span> <span className="key">↓</span> <span className="key">←</span> <span className="key">→</span> to move</li>
+                    <li>Hold <span className="key">SPACE</span> to draw</li>
+                    <li>Reveal 80% of the image to win!</li>
+                    <li>Avoid enemies while drawing</li>
+                </ul>
+            </div>
         </div>
     );
 };
