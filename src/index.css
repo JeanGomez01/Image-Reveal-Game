@@ -1,79 +1,125 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+            --retro-black: #0a0a2a;
+            --retro-dark: #222034;
+            --retro-purple: #493c96;
+            --retro-blue: #4b80ca;
+            --retro-green: #00ff00;
+            --retro-yellow: #ffcd75;
+            --retro-orange: #ff8b33;
+            --retro-red: #e43b44;
+            --retro-pink: #ff00ff;
+            --retro-white: #f4f4f4;
+        }
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+        body {
+            background-color: var(--retro-black);
+            color: var(--retro-white);
+            font-family: 'Press Start 2P', monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow: hidden;
+        }
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
+        .canvas-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 0 auto;
+        }
 
-a:hover {
-  color: #535bf2;
-}
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
 
-/* body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-} */
-body {
-  margin: 0;
-  background-color: #111;
-  font-family: sans-serif;
-  min-height: 100vh;
-}
+        #gameCanvas {
+            z-index: 1;
+            border: 4px solid var(--retro-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+        #uiCanvas {
+            z-index: 2;
+            pointer-events: none; /* Permite que los clics pasen al canvas de abajo */
+        }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 3;
+            display: none;
+        }
 
-button:hover {
-  border-color: #646cff;
-}
+        .lcd-display {
+            background-color: #001100;
+            color: var(--retro-green);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            text-shadow: 0 0 5px var(--retro-green);
+            margin-bottom: 5px;
+            border: 1px solid var(--retro-green);
+        }
 
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+        .hearts {
+            display: flex;
+            gap: 5px;
+        }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
+        .heart {
+            width: 20px;
+            height: 20px;
+            filter: drop-shadow(0 0 2px var(--retro-pink));
+        }
 
-  a:hover {
-    color: #747bff;
-  }
+        .credit {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: var(--retro-yellow);
+            font-size: 10px;
+            text-shadow: 0 0 5px var(--retro-orange);
+        }
 
-  button {
-    background-color: #f9f9f9;
-  }
-}
+        .hidden {
+            display: none;
+        }
+
+        /* Efectos de animación */
+        @keyframes pulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .blink {
+            animation: blink 0.5s infinite;
+        }

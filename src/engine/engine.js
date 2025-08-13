@@ -157,7 +157,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             // Iniciar el bucle del juego incluso si la imagen falla
             showStartMenu();
         };
-        backgroundImgElement.src = "image.png";
+        backgroundImgElement.src = "image3.png";
     };
 
     // Mostrar el menú de inicio
@@ -173,8 +173,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         c2d.fillStyle = '#FF8800';
         c2d.font = 'bold 16px "Press Start 2P", monospace';
         c2d.textAlign = 'center';
-        c2d.fillText('IMAGE REVEAL', canvasW / 2, canvasH / 3);
-        
+    
         // Dibujar el botón de inicio
         const btnWidth = 80;
         const btnHeight = 30;

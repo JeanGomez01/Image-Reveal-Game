@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Reveal - Retro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --retro-black: #0a0a2a;
+            --retro-dark: #222034;
+            --retro-purple: #493c96;
+            --retro-blue: #4b80ca;
+            --retro-green: #00ff00;
+            --retro-yellow: #ffcd75;
+            --retro-orange: #ff8b33;
+            --retro-red: #e43b44;
+            --retro-pink: #ff00ff;
+            --retro-white: #f4f4f4;
+        }
+
+        body {
+            background-color: var(--retro-black);
+            color: var(--retro-white);
+            font-family: 'Press Start 2P', monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #gameCanvas {
+            z-index: 1;
+            border: 4px solid var(--retro-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        #uiCanvas {
+            z-index: 2;
+            pointer-events: none; /* Permite que los clics pasen al canvas de abajo */
+        }
+
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 3;
+            display: none;
+        }
+
+        .lcd-display {
+            background-color: #001100;
+            color: var(--retro-green);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            text-shadow: 0 0 5px var(--retro-green);
+            margin-bottom: 5px;
+            border: 1px solid var(--retro-green);
+        }
+
+        .hearts {
+            display: flex;
+            gap: 5px;
+        }
+
+        .heart {
+            width: 20px;
+            height: 20px;
+            filter: drop-shadow(0 0 2px var(--retro-pink));
+        }
+
+        .credit {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: var(--retro-yellow);
+            font-size: 10px;
+            text-shadow: 0 0 5px var(--retro-orange);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Efectos de animación */
+        @keyframes pulse {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .blink {
+            animation: blink 0.5s infinite;
+        }
+
+        /* Pantalla de carga */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--retro-black);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .loading-text {
+            color: var(--retro-green);
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--retro-green);
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 20px;
+            background-color: var(--retro-dark);
+            border: 2px solid var(--retro-green);
+            position: relative;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--retro-green);
+            transition: width 0.3s;
+        }
+
+        /* Menú de selección */
+        .selection-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--retro-black);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .selection-title {
+            color: var(--retro-green);
+            font-size: 24px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px var(--retro-green);
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+        }
+
+        .selection-item {
+            width: 150px;
+            height: 150px;
+            border: 3px solid var(--retro-pink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px var(--retro-pink);
+        }
+
+        .selection-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--retro-pink);
+        }
+
+        .selection-item-name {
+            margin-top: 10px;
+            color: var(--retro-white);
+            font-size: 14px;
+        }
+
+        .back-button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: var(--retro-yellow);
+            color: var(--retro-black);
+            border: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--retro-yellow);
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-text">LOADING...</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
+            </div>
+        </div>
+
+        <div class="selection-screen" id="selectionScreen">
+            <div class="selection-title">SELECT IMAGE</div>
+            <div class="selection-grid">
+                <div class="selection-item" data-image="image.png">
+                    <div class="selection-item-name">DEFAULT</div>
+                </div>
+                <div class="selection-item" data-image="image.png">
+                    <div class="selection-item-name">NAMI</div>
+                </div>
+                <div class="selection-item" data-image="image.png">
+                    <div class="selection-item-name">LUFFY</div>
+                </div>
+                <div class="selection-item" data-image="image.png">
+                    <div class="selection-item-name">ZORO</div>
+                </div>
+            </div>
+            <button class="back-button" id="backButton">BACK</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+            <canvas id="uiCanvas" width="600" height="600"></canvas>
+        </div>
+        
+        <div class="credit">pkNoCREDIT</div>
+    </div>
+
+    <script src="game-engine.js"></script>
+    <script>
+        // Variables globales
+        const gameCanvas = document.getElementById('gameCanvas');
+        const uiCanvas = document.getElementById('uiCanvas');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingBar = document.getElementById('loadingBar');
+        const selectionScreen = document.getElementById('selectionScreen');
+        const backButton = document.getElementById('backButton');
+        const selectionItems = document.querySelectorAll('.selection-item');
+        
+        let game = null;
+        let currentState = 'loading';
+        let resources = {
+            images: {},
+            loaded: 0,
+            total: 5 // Número total de recursos a cargar
+        };
+        
+        // Función para actualizar la barra de carga
+        function updateLoadingBar() {
+            const progress = (resources.loaded / resources.total) * 100;
+            loadingBar.style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                // Mostrar menú principal después de un breve retraso
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    showMainMenu();
+                }, 500);
+            }
+        }
+        
+        // Cargar recursos
+        function loadResources() {
+            // Imágenes a cargar
+            const imagesToLoad = [
+                { name: 'heart', src: 'assets/heart.png' },
+                { name: 'bgMenu', src: 'assets/bg_menu.png' },
+                { name: 'buttonBg', src: 'assets/button_bg.png' },
+                { name: 'circleTransition', src: 'assets/circle_transition.png' },
+                { name: 'gameImage', src: 'image.png' }
+            ];
+            
+            // Cargar cada imagen
+            imagesToLoad.forEach(img => {
+                resources.images[img.name] = new Image();
+                resources.images[img.name].onload = () => {
+                    resources.loaded++;
+                    updateLoadingBar();
+                };
+                resources.images[img.name].onerror = () => {
+                    console.error(`Failed to load image: ${img.src}`);
+                    resources.loaded++;
+                    updateLoadingBar();
+                };
+                resources.images[img.name].src = img.src;
+            });
+        }
+        
+        // Mostrar menú principal
+        function showMainMenu() {
+            currentState = 'menu';
+            
+            // Limpiar canvas
+            const gameCtx = gameCanvas.getContext('2d');
+            const uiCtx = uiCanvas.getContext('2d');
+            
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            
+            // Dibujar fondo
+            if (resources.images.bgMenu) {
+                gameCtx.drawImage(resources.images.bgMenu, 0, 0, gameCanvas.width, gameCanvas.height);
+            } else {
+                gameCtx.fillStyle = '#0a0a2a';
+                gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+            }
+            
+            // Dibujar título
+            uiCtx.fillStyle = '#ff00ff';
+            uiCtx.font = '40px "Press Start 2P"';
+            uiCtx.textAlign = 'center';
+            uiCtx.shadowColor = '#ff00ff';
+            uiCtx.shadowBlur = 15;
+            uiCtx.fillText('IMAGE', uiCanvas.width/2, uiCanvas.height/3 - 30);
+            uiCtx.fillText('REVEAL', uiCanvas.width/2, uiCanvas.height/3 + 30);
+            uiCtx.shadowBlur = 0;
+            
+            // Dibujar botón PLAY
+            const btnWidth = 200;
+            const btnHeight = 60;
+            const btnX = (uiCanvas.width - btnWidth) / 2;
+            const btnY = uiCanvas.height * 0.6;
+            
+            if (resources.images.buttonBg) {
+                uiCtx.drawImage(resources.images.buttonBg, btnX, btnY, btnWidth, btnHeight);
+            } else {
+                uiCtx.fillStyle = '#00ff00';
+                uiCtx.fillRect(btnX, btnY, btnWidth, btnHeight);
+            }
+            
+            uiCtx.fillStyle = '#ffffff';
+            uiCtx.font = '24px "Press Start 2P"';
+            uiCtx.fillText('PLAY', uiCanvas.width/2, btnY + btnHeight/2 + 8);
+            
+            // Dibujar instrucciones
+            uiCtx.fillStyle = '#ffcd75';
+            uiCtx.font = '12px "Press Start 2P"';
+            uiCtx.fillText('ARROWS: MOVE', uiCanvas.width/2, uiCanvas.height * 0.8);
+            uiCtx.fillText('SPACE: DRAW', uiCanvas.width/2, uiCanvas.height * 0.85);
+            
+            // Añadir evento de clic para el botón PLAY
+            uiCanvas.addEventListener('click', handleMainMenuClick);
+        }
+        
+        // Manejar clics en el menú principal
+        function handleMainMenuClick(e) {
+            if (currentState !== 'menu') return;
+            
+            const rect = uiCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (uiCanvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (uiCanvas.height / rect.height);
+            
+            // Verificar si se hizo clic en el botón PLAY
+            const btnWidth = 200;
+            const btnHeight = 60;
+            const btnX = (uiCanvas.width - btnWidth) / 2;
+            const btnY = uiCanvas.height * 0.6;
+            
+            if (x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight) {
+                // Transición a la pantalla de selección
+                transitionToSelection();
+            }
+        }
+        
+        // Transición a la pantalla de selección
+        function transitionToSelection() {
+            // Eliminar evento de clic del menú principal
+            uiCanvas.removeEventListener('click', handleMainMenuClick);
+            
+            // Efecto de transición
+            let progress = 0;
+            const transitionSpeed = 0.02;
+            
+            function animateTransition() {
+                progress += transitionSpeed;
+                
+                if (progress >= 1) {
+                    // Mostrar pantalla de selección
+                    selectionScreen.style.display = 'flex';
+                    currentState = 'selection';
+                    return;
+                }
+                
+                // Efecto de círculo expandiéndose
+                const uiCtx = uiCanvas.getContext('2d');
+                uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+                
+                const size = uiCanvas.width * 2 * progress;
+                const x = uiCanvas.width / 2 - size / 2;
+                const y = uiCanvas.height / 2 - size / 2;
+                
+                if (resources.images.circleTransition) {
+                    uiCtx.drawImage(resources.images.circleTransition, x, y, size, size);
+                } else {
+                    uiCtx.fillStyle = '#ff00ff';
+                    uiCtx.beginPath();
+                    uiCtx.arc(uiCanvas.width / 2, uiCanvas.height / 2, size / 2, 0, Math.PI * 2);
+                    uiCtx.fill();
+                }
+                
+                requestAnimationFrame(animateTransition);
+            }
+            
+            animateTransition();
+        }
+        
+        // Iniciar el juego
+        function startGame(imageSrc) {
+            // Ocultar pantalla de selección
+            selectionScreen.style.display = 'none';
+            
+            // Limpiar canvas
+            const gameCtx = gameCanvas.getContext('2d');
+            const uiCtx = uiCanvas.getContext('2d');
+            
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+            uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
+            
+            // Crear instancia del juego
+            game = new ImageRevealGame(gameCanvas, uiCanvas, {
+                borderWidth: 2,
+                winPercentage: 80,
+                initialTime: 180,
+                initialLives: 3
+            });
+            
+            // Cambiar la imagen de fondo si se seleccionó una diferente
+            if (imageSrc && imageSrc !== 'image.png') {
+                game.backgroundImage.src = imageSrc;
+            }
+            
+            currentState = 'playing';
+        }
+        
+        // Configurar eventos para la pantalla de selección
+        selectionItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const imageSrc = item.getAttribute('data-image');
+                startGame(imageSrc);
+            });
+        });
+        
+        backButton.addEventListener('click', () => {
+            selectionScreen.style.display = 'none';
+            showMainMenu();
+        });
+        
+        // Iniciar carga de recursos
+        loadResources();
+    </script>
+</body>
+</html>

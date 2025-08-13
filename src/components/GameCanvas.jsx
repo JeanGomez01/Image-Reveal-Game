@@ -148,7 +148,7 @@ const GameCanvas = () => {
                             checked={playMusic} 
                             onChange={handleMusicToggle}
                         />
-                        <span>Music</span>
+                        <span style={{marginLeft: "5px"}}>Music</span>
                     </label>
                 </div>
             </div>
