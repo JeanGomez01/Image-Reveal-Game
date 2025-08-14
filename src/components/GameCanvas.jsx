@@ -24,6 +24,7 @@ const GameCanvas = () => {
     const [showSelectionScreen, setShowSelectionScreen] = useState(false);
     const [selectedImage, setSelectedImage] = useState('image.png');
     const [gameInstance, setGameInstance] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     // Opciones de imágenes disponibles
     const imageOptions = [
@@ -31,6 +32,18 @@ const GameCanvas = () => {
         { id: 'image2', src: 'image2.png', name: 'Imagen 2' },
         { id: 'image3', src: 'image3.png', name: 'Imagen 3' }
     ];
+
+    // Precarga de imágenes
+    useEffect(() => {
+        const preloadImages = () => {
+            imageOptions.forEach(image => {
+                const img = new Image();
+                img.src = image.src;
+            });
+        };
+        
+        preloadImages();
+    }, []);
 
     useEffect(() => {
         // Cargar la fuente "Press Start 2P" para el estilo retro
@@ -41,7 +54,7 @@ const GameCanvas = () => {
             document.head.appendChild(link);
         };
 
-        // Funci\u00f3n para cargar scripts externos necesarios
+        // Función para cargar scripts externos necesarios
         const loadScript = (src) => {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -99,55 +112,83 @@ const GameCanvas = () => {
         }
     }, [showMenu, playMusic]);
 
+    // Efecto para inicializar el juego cuando se selecciona una imagen
     useEffect(() => {
-        // Inicializar el juego cuando el componente se monta, FPSMeter está disponible y no estamos en el menú
-        if (canvasRef.current &&
-            statsRef.current &&
-            fpsMeterRef.current &&
-            messagesRef.current &&
-            !gameInitialized &&
-            !showMenu &&
-            !showSelectionScreen) {
-
-            // Verificar que FPSMeter está disponible
-            if (typeof window.FPSMeter === 'undefined') {
-                console.log("FPSMeter not available yet, waiting...");
-                return; // Salir y esperar a que FPSMeter se cargue
-            }
-
-            try {  
-                if (typeof initGame !== 'function') {
-                    throw new Error("initGame is not a function");
-                }
- 
-                const game = initGame(
-                    canvasRef.current,
-                    statsRef.current,
-                    fpsMeterRef.current,
-                    messagesRef.current,
-                    selectedImage,
-                    playMusic
-                );
-
-                console.log("Game initialized:", game);
-                setGameInstance(game);
-                setGameInitialized(true);
- 
-                return () => { 
-                    if (game && typeof game.cleanup === 'function') {
-                        game.cleanup();
-                    }
-                };
-            } catch (error) {
-                console.error("Error initializing game:", error);
-                setError(`Error initializing game: ${error.message}`);
-            }
+        // Solo inicializar si no estamos en el menú ni en la pantalla de selección
+        if (!showMenu && !showSelectionScreen && !gameInitialized && !isLoading) {
+            initializeGame();
         }
-    }, [canvasRef, statsRef, fpsMeterRef, messagesRef, gameInitialized, showMenu, showSelectionScreen, selectedImage, playMusic]);
+    }, [showMenu, showSelectionScreen, gameInitialized, isLoading]);
+
+    // Función para inicializar el juego
+    const initializeGame = async () => {
+        if (!canvasRef.current || !statsRef.current || !fpsMeterRef.current || !messagesRef.current) {
+            console.error("Required DOM elements not available");
+            return;
+        }
+
+        // Verificar que FPSMeter está disponible
+        if (typeof window.FPSMeter === 'undefined') {
+            console.log("FPSMeter not available yet, waiting...");
+            return; // Salir y esperar a que FPSMeter se cargue
+        }
+
+        try {
+            setIsLoading(true);
+            console.log("Initializing game...");
+
+            // Verificar que todos los elementos DOM existen
+            console.log("Canvas element:", canvasRef.current);
+            console.log("Stats element:", statsRef.current);
+            console.log("FPSMeter element:", fpsMeterRef.current);
+            console.log("Messages element:", messagesRef.current);
+            console.log("FPSMeter available:", window.FPSMeter);
+            console.log("Selected image:", selectedImage);
+
+            // Verificar que initGame es una función
+            if (typeof initGame !== 'function') {
+                throw new Error("initGame is not a function");
+            }
+
+            // Precargar la imagen seleccionada
+            await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = selectedImage;
+            });
+
+            // Inicializar el juego con la imagen seleccionada
+            const game = initGame(
+                canvasRef.current,
+                statsRef.current,
+                fpsMeterRef.current,
+                messagesRef.current,
+                selectedImage,
+                playMusic
+            );
+
+            console.log("Game initialized:", game);
+            setGameInstance(game);
+            setGameInitialized(true);
+            setIsLoading(false);
+        } catch (error) {
+            console.error("Error initializing game:", error);
+            setError(`Error initializing game: ${error.message}`);
+            setIsLoading(false);
+        }
+    };
+
+    // Limpiar recursos cuando el componente se desmonta
+    useEffect(() => {
+        return () => {
+            if (gameInstance && typeof gameInstance.cleanup === 'function') {
+                gameInstance.cleanup();
+            }
+        };
+    }, [gameInstance]);
 
     const handleMusicToggle = (e) => {
-        window.LP.audioEngine.stop("music-game");
-        window.LP.audioEngine.stop("start-game");
         const newMusicState = e.target.checked;
         setPlayMusic(newMusicState);
         
@@ -178,11 +219,6 @@ const GameCanvas = () => {
         // Mostrar la pantalla de selección de imágenes
         setShowMenu(false);
         setShowSelectionScreen(true);
-        
-        // Detener la música del menú si está sonando
-        if (window.LP && window.LP.audioEngine) {
-            window.LP.audioEngine.stop("music-game");
-        }
     };
 
     const handleImageSelect = (imageSrc) => {
@@ -251,11 +287,19 @@ const GameCanvas = () => {
                     className="game-canvas"
                 />
                 
+                {/* Pantalla de carga */}
+                {isLoading && (
+                    <div className="loading-screen">
+                        <div className="loading-text">Cargando...</div>
+                        <div className="loading-spinner"></div>
+                    </div>
+                )}
+                
                 {/* Menú de inicio */}
                 {showMenu && (
                     <div className="start-menu"> 
                         <button className="start-button pulse" onClick={handleStartClick}>
-                            PLAY
+                            JUGAR
                         </button>
                     </div>
                 )}

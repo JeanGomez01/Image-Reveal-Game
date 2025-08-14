@@ -1,13 +1,21 @@
+
 // Global namespace for the game
 window.LP = window.LP || {};
 
 // Audio engine implementation
 export const initAudioEngine = () => {
+    // Si ya existe una instancia del motor de audio, devolverla
+    if (window.LP && window.LP.audioEngine) {
+        console.log("Audio engine already initialized, returning existing instance");
+        return window.LP.audioEngine;
+    }
+
     const audioEngine = {};
 
     // Audio settings
     let musicEnabled = true;
     let currentMusic = null;
+    let activeAudio = new Map(); // Para rastrear todos los sonidos activos
 
     // Sound effects mapping
     const sounds = {
@@ -30,14 +38,21 @@ export const initAudioEngine = () => {
         audio.loop = sound.loop;
         audio.volume = sound.volume;
         audioElements[key] = audio;
-        
+
         // Manejar errores de carga
         audio.onerror = (e) => {
             console.warn(`Error loading sound '${key}':`, e);
         };
-        
+
         // Precargar sonidos
         audio.load();
+
+        // Agregar evento para eliminar del mapa cuando termine
+        audio.addEventListener('ended', () => {
+            if (!sound.loop) {
+                activeAudio.delete(key);
+            }
+        });
     }
 
     // Play a sound
@@ -55,7 +70,13 @@ export const initAudioEngine = () => {
             return;
         }
 
-        // Si es música, detener la música actual primero
+        // Si es m\u00fasica y ya est\u00e1 sonando, no hacer nada
+        if (sound.category === 'music' && !audio.paused) {
+            console.log(`Music '${soundName}' is already playing`);
+            return;
+        }
+
+        // Si es m\u00fasica, detener la m\u00fasica actual primero
         if (sound.category === 'music') {
             if (currentMusic && currentMusic !== soundName) {
                 audioEngine.stop(currentMusic);
@@ -63,7 +84,7 @@ export const initAudioEngine = () => {
             currentMusic = soundName;
         }
 
-        // Si ya está reproduciendo, reiniciar solo para efectos de sonido
+        // Si ya est\u00e1 reproduciendo, reiniciar solo para efectos de sonido
         if (!audio.paused && sound.category !== 'music') {
             audio.currentTime = 0;
         } else if (audio.paused) {
@@ -71,6 +92,9 @@ export const initAudioEngine = () => {
             audio.play().catch(error => {
                 console.warn(`Error playing sound '${soundName}':`, error);
             });
+
+            // Agregar al mapa de sonidos activos
+            activeAudio.set(soundName, audio);
         }
     };
 
@@ -82,13 +106,16 @@ export const initAudioEngine = () => {
         }
 
         const audio = audioElements[soundName];
-        
+
         if (!audio.paused) {
             audio.pause();
             audio.currentTime = 0;
         }
-        
-        // Si era la música actual, limpiar la referencia
+
+        // Eliminar del mapa de sonidos activos
+        activeAudio.delete(soundName);
+
+        // Si era la m\u00fasica actual, limpiar la referencia
         if (currentMusic === soundName) {
             currentMusic = null;
         }
@@ -102,6 +129,7 @@ export const initAudioEngine = () => {
                 audio.currentTime = 0;
             }
         }
+        activeAudio.clear();
         currentMusic = null;
     };
 
@@ -136,7 +164,7 @@ export const initAudioEngine = () => {
     // Store in the global namespace for access from other modules
     window.LP.audioEngine = audioEngine;
 
-    console.log("audio engine initialized");
+    console.log("Audio engine initialized");
 
     return audioEngine;
 };
