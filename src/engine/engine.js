@@ -20,7 +20,7 @@ const defaultHelpers = {
 // We'll need to include this library in our HTML or import it
 const FPSMeter = window.FPSMeter;
 
-export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement) => {
+export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement, selectedImage = 'image.png', musicEnabled = true) => {
     // Create the game engine object
     const engine = {};
 
@@ -46,6 +46,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     let nextAddTimePercentage = 30;
     let gameLoopId = null;
     let gameStarted = false;
+    let audioEngine = null;
 
     // Initialize the game
     engine.init = () => {
@@ -61,7 +62,17 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
 
         if (typeof initAudioEngine === 'function') {
-            initAudioEngine();
+            audioEngine = initAudioEngine();
+            
+            // Configurar el estado inicial de la música
+            if (audioEngine) {
+                audioEngine.setMusic(musicEnabled);
+                
+                // Reproducir la música del juego si está habilitada
+                if (musicEnabled) {
+                    audioEngine.trigger('start-game');
+                }
+            }
         } else {
             console.error("initAudioEngine function not found");
         }
@@ -117,15 +128,6 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             resetLevel();
         }
 
-        // const checkbox = document.getElementById('miCheckbox');
-        // const isChecked = checkbox ? checkbox.checked : false;
-        // console.log('Checkbox encendido:', isChecked);
-        // if (isChecked && window.LP && window.LP.audioEngine) {
-        //     window.LP.audioEngine.stop("music-game");
-        //     window.LP.audioEngine.trigger("start-game");
-        // }
-
-
         // Cargar la imagen de fondo
         backgroundImgElement = new Image();
         backgroundImgElement.onload = () => {
@@ -149,79 +151,19 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             if (player && typeof player.reset === 'function') {
                 player.reset({ canvasW, canvasH });
             }
-            // Mostrar el menú de inicio
-            showStartMenu();
+            
+            // Iniciar el juego
+            startGame();
         };
         backgroundImgElement.onerror = (error) => {
             console.error("Error loading background image:", error);
-            // Iniciar el bucle del juego incluso si la imagen falla
-            showStartMenu();
+            // Iniciar el juego incluso si la imagen falla
+            startGame();
         };
-        backgroundImgElement.src = "image3.png";
-    };
-
-    // Mostrar el menú de inicio
-    const showStartMenu = () => {
-        // Limpiar el canvas
-        c2d.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        c2d.fillRect(0, 0, canvasW, canvasH);
-
-        // Dibujar el fondo del juego con opacidad reducida
-        renderBackground(0.3);
-
-        // Dibujar el título
-        c2d.fillStyle = '#FF8800';
-        c2d.font = 'bold 16px "Press Start 2P", monospace';
-        c2d.textAlign = 'center';
-
-        // Dibujar el botón de inicio
-        const btnWidth = 100;
-        const btnHeight = 30;
-        const btnX = (canvasW - btnWidth) / 2;
-        const btnY = canvasH / 2;
-
-        // Botón con efecto de brillo
-        c2d.fillStyle = '#4CAF50';
-        c2d.fillRect(btnX, btnY, btnWidth, btnHeight);
-        c2d.fillStyle = '#2E7D32';
-        c2d.fillRect(btnX + 2, btnY + 2, btnWidth - 4, btnHeight - 4);
-
-        // Texto del botón
-        c2d.fillStyle = '#FFFFFF';
-        c2d.font = 'bold 12px "Press Start 2P", monospace';
-        c2d.fillText('Empezar', canvasW / 2, btnY + btnHeight / 2 + 4);
-
-
-        // Añadir evento de clic para iniciar el juego
-        const handleClick = (e) => {
-            // Convertir coordenadas del clic a coordenadas del canvas
-            const rect = canvasElement.getBoundingClientRect();
-            const scaleX = canvasElement.width / rect.width;
-            const scaleY = canvasElement.height / rect.height;
-
-            const x = (e.clientX - rect.left) * scaleX / 2; // Dividir por 2 debido al scale(2, 2)
-            const y = (e.clientY - rect.top) * scaleY / 2;
-
-            // Verificar si el clic fue en el botón
-            if (x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight) {
-                // Iniciar el juego
-                startGame();
-                // Eliminar el evento de clic
-                canvasElement.removeEventListener('click', handleClick);
-            }
-        };
-
-        canvasElement.addEventListener('click', handleClick);
-
-        // También permitir iniciar con la tecla Enter o Espacio
-        const handleKeyDown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                startGame();
-                window.removeEventListener('keydown', handleKeyDown);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
+        
+        // Usar la imagen seleccionada
+        console.log("Loading image:", selectedImage);
+        backgroundImgElement.src = selectedImage;
     };
 
     // Iniciar el juego
@@ -232,15 +174,6 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             updateFilledArea();
             // Iniciar el bucle del juego
             gameLoopId = requestAnimationFrame(mainLoop);
-            // Reproducir sonido de inicio si está disponible
-            const checkbox = document.getElementById('miCheckbox');
-            const isChecked = checkbox ? checkbox.checked : false;
-            console.log('Checkbox encendido:', isChecked);
-            if (isChecked && window.LP && window.LP.audioEngine) {
-                window.LP.audioEngine.stop("music-game");
-                window.LP.audioEngine.trigger("start-game");
-            }
-
         }
     };
 
@@ -260,7 +193,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     engine.playerDied = () => {
         console.log("Player died");
         engine.showMessage("You died :(");
-        window.LP.audioEngine.trigger("game-over");
+        
+        if (audioEngine && musicEnabled) {
+            audioEngine.trigger("game-over");
+        }
+        
         resetLevel();
     };
 
@@ -271,9 +208,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         if (clearedPercentage >= 80) {
             console.log("Win!");
             engine.showMessage("You win!");
-            if (window.LP && window.LP.audioEngine) {
-                window.LP.audioEngine.trigger("win");
+            
+            if (audioEngine && musicEnabled) {
+                audioEngine.trigger("win");
             }
+            
             resetLevel();
         }
 
@@ -281,9 +220,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             remainingTime += 30;
             nextAddTimePercentage += 10; // We add time each 10 now
             engine.showMessage("Extra time!");
-            if (window.LP && window.LP.audioEngine) {
-                window.LP.audioEngine.trigger("extra-time");
+            
+            if (audioEngine && musicEnabled) {
+                audioEngine.trigger("extra-time");
             }
+            
             console.log("Extra time added");
         }
 
@@ -376,7 +317,10 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 engine.playerDied();
             } else if (remainingTime === 30) {
                 engine.showMessage("Hurry up!!");
-                window.LP.audioEngine.trigger("hurry");
+                
+                if (audioEngine && musicEnabled) {
+                    audioEngine.trigger("hurry");
+                }
             }
         }
 
@@ -494,6 +438,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             } catch (error) {
                 console.error("Error destroying FPSMeter:", error);
             }
+        }
+
+        // Detener todos los sonidos
+        if (audioEngine) {
+            audioEngine.stopAll();
         }
 
         console.log("Game engine cleaned up");

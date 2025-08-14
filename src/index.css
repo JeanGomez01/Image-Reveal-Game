@@ -1,125 +1,243 @@
 :root {
-            --retro-black: #0a0a2a;
-            --retro-dark: #222034;
-            --retro-purple: #493c96;
-            --retro-blue: #4b80ca;
-            --retro-green: #00ff00;
-            --retro-yellow: #ffcd75;
-            --retro-orange: #ff8b33;
-            --retro-red: #e43b44;
-            --retro-pink: #ff00ff;
-            --retro-white: #f4f4f4;
-        }
+  --retro-black: #0a0a2a;
+  --retro-dark: #222034;
+  --retro-purple: #493c96;
+  --retro-blue: #4b80ca;
+  --retro-green: #00ff00;
+  --retro-yellow: #ffcd75;
+  --retro-orange: #ff8b33;
+  --retro-red: #e43b44;
+  --retro-pink: #ff00ff;
+  --retro-white: #f4f4f4;
+}
 
-        body {
-            background-color: var(--retro-black);
-            color: var(--retro-white);
-            font-family: 'Press Start 2P', monospace;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            overflow: hidden;
-        }
+body {
+  margin: 0;
+  font-family: 'Press Start 2P', monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--retro-black);
+  color: var(--retro-white);
+}
 
-        .game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
 
-        .canvas-container {
-            position: relative;
-            width: 600px;
-            height: 600px;
-            margin: 0 auto;
-        }
+.App {
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+}
 
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated;
-        }
+.App-header {
+  background-color: var(--retro-black);
+  padding: 20px;
+  color: var(--retro-yellow);
+  border-bottom: 4px solid var(--retro-purple);
+}
 
-        #gameCanvas {
-            z-index: 1;
-            border: 4px solid var(--retro-blue);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        }
+.App-header h1 {
+  margin: 0;
+  text-shadow: 3px 3px 0 var(--retro-purple);
+}
 
-        #uiCanvas {
-            z-index: 2;
-            pointer-events: none; /* Permite que los clics pasen al canvas de abajo */
-        }
+main {
+  position: relative;
+  min-height: 800px;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
 
-        .hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 3;
-            display: none;
-        }
+.game-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--retro-black);
+  border: 4px solid var(--retro-purple);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(73, 60, 150, 0.6);
+  padding: 20px;
+  box-sizing: border-box;
+}
 
-        .lcd-display {
-            background-color: #001100;
-            color: var(--retro-green);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 14px;
-            text-shadow: 0 0 5px var(--retro-green);
-            margin-bottom: 5px;
-            border: 1px solid var(--retro-green);
-        }
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--retro-purple);
+}
 
-        .hearts {
-            display: flex;
-            gap: 5px;
-        }
+.game-title {
+  color: var(--retro-yellow);
+  font-size: 24px;
+  margin: 0;
+  text-shadow: 3px 3px 0 var(--retro-purple);
+  letter-spacing: 2px;
+}
 
-        .heart {
-            width: 20px;
-            height: 20px;
-            filter: drop-shadow(0 0 2px var(--retro-pink));
-        }
+.game-controls {
+  display: flex;
+  align-items: center;
+}
 
-        .credit {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            color: var(--retro-yellow);
-            font-size: 10px;
-            text-shadow: 0 0 5px var(--retro-orange);
-        }
+.music-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--retro-green);
+  font-size: 12px;
+}
 
-        .hidden {
-            display: none;
-        }
+.music-toggle input {
+  margin-right: 8px;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--retro-green);
+  background-color: var(--retro-black);
+  cursor: pointer;
+}
 
-        /* Efectos de animación */
-        @keyframes pulse {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.05); filter: brightness(1.2); }
-            100% { transform: scale(1); filter: brightness(1); }
-        }
+.music-toggle input:checked {
+  background-color: var(--retro-green);
+  position: relative;
+}
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
+.music-toggle input:checked::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--retro-black);
+}
 
-        .pulse {
-            animation: pulse 2s infinite;
-        }
+.game-stats-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px;
+  background-color: var(--retro-dark);
+  border: 2px solid var(--retro-purple);
+  border-radius: 4px;
+  font-size: 12px;
+}
 
-        .blink {
-            animation: blink 0.5s infinite;
-        }
+.fps-meter {
+  width: 80px;
+}
+
+.game-messages {
+  color: var(--retro-yellow);
+  text-align: center;
+  flex-grow: 1;
+  font-size: 14px;
+  text-shadow: 1px 1px 0 var(--retro-black);
+}
+
+.game-stats {
+  color: var(--retro-green);
+  text-align: right;
+}
+
+.canvas-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.game-canvas { 
+  border-radius: 4px; 
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  max-width: 100%;
+  height: auto;
+}
+
+.game-instructions {
+  background-color: var(--retro-dark);
+  border: 2px solid var(--retro-purple);
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.game-instructions h3 {
+  color: var(--retro-yellow);
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.game-instructions ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.game-instructions li {
+  font-size: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  color: var(--retro-white);
+}
+
+.game-instructions li::before {
+  content: "►";
+  color: var(--retro-green);
+  margin-right: 8px;
+}
+
+.key {
+  display: inline-block;
+  background-color: var(--retro-purple);
+  color: var(--retro-white);
+  padding: 4px 8px;
+  margin: 0 4px;
+  border-radius: 4px;
+  font-size: 10px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Animaciones retro */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.game-title {
+  animation: pulse 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px;
+  }
+  
+  .game-title {
+    font-size: 18px;
+  }
+  
+  .game-instructions li {
+    font-size: 8px;
+  }
+  
+  .key {
+    padding: 2px 4px;
+    font-size: 8px;
+  }
+}

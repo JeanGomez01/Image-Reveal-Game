@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import './ImageSelection.css';
 
 // Importar el módulo de inicialización del juego con sintaxis ES6
 import { initGame } from '../engine/engine';
@@ -16,9 +17,20 @@ const GameCanvas = () => {
     const statsRef = useRef(null);
     const fpsMeterRef = useRef(null);
     const messagesRef = useRef(null);
-    const [playMusic, setPlayMusic] = useState(false);
+    const [playMusic, setPlayMusic] = useState(true);
     const [gameInitialized, setGameInitialized] = useState(false);
     const [error, setError] = useState(null);
+    const [showMenu, setShowMenu] = useState(true);
+    const [showSelectionScreen, setShowSelectionScreen] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('image.png');
+    const [gameInstance, setGameInstance] = useState(null);
+
+    // Opciones de imágenes disponibles
+    const imageOptions = [
+        { id: 'image1', src: 'image.png', name: 'Imagen 1' },
+        { id: 'image2', src: 'image2.png', name: 'Imagen 2' },
+        { id: 'image3', src: 'image3.png', name: 'Imagen 3' }
+    ];
 
     useEffect(() => {
         // Cargar la fuente "Press Start 2P" para el estilo retro
@@ -29,7 +41,7 @@ const GameCanvas = () => {
             document.head.appendChild(link);
         };
 
-        // Función para cargar scripts externos necesarios
+        // Funci\u00f3n para cargar scripts externos necesarios
         const loadScript = (src) => {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -70,13 +82,32 @@ const GameCanvas = () => {
         loadDependencies();
     }, []);
 
+    // Efecto para inicializar el motor de audio y reproducir música del menú
     useEffect(() => {
-        // Inicializar el juego cuando el componente se monta y FPSMeter está disponible
+        if (typeof window !== 'undefined' && showMenu && playMusic) {
+            // Importar el motor de audio
+            import('../engine/audioEngine').then(({ initAudioEngine }) => {
+                if (typeof initAudioEngine === 'function') {
+                    const audioEngine = initAudioEngine();
+                    
+                    // Reproducir música del menú
+                    if (audioEngine && typeof audioEngine.trigger === 'function') {
+                        audioEngine.trigger('music-game');
+                    }
+                }
+            });
+        }
+    }, [showMenu, playMusic]);
+
+    useEffect(() => {
+        // Inicializar el juego cuando el componente se monta, FPSMeter está disponible y no estamos en el menú
         if (canvasRef.current &&
             statsRef.current &&
             fpsMeterRef.current &&
             messagesRef.current &&
-            !gameInitialized) {
+            !gameInitialized &&
+            !showMenu &&
+            !showSelectionScreen) {
 
             // Verificar que FPSMeter está disponible
             if (typeof window.FPSMeter === 'undefined') {
@@ -84,34 +115,25 @@ const GameCanvas = () => {
                 return; // Salir y esperar a que FPSMeter se cargue
             }
 
-            try {
-                console.log("Initializing game...");
-
-                // Verificar que todos los elementos DOM existen
-                console.log("Canvas element:", canvasRef.current);
-                console.log("Stats element:", statsRef.current);
-                console.log("FPSMeter element:", fpsMeterRef.current);
-                console.log("Messages element:", messagesRef.current);
-                console.log("FPSMeter available:", window.FPSMeter);
-
-                // Verificar que initGame es una función
+            try {  
                 if (typeof initGame !== 'function') {
                     throw new Error("initGame is not a function");
                 }
-
+ 
                 const game = initGame(
                     canvasRef.current,
                     statsRef.current,
                     fpsMeterRef.current,
-                    messagesRef.current
+                    messagesRef.current,
+                    selectedImage,
+                    playMusic
                 );
 
                 console.log("Game initialized:", game);
+                setGameInstance(game);
                 setGameInitialized(true);
-
-                // Limpiar cuando el componente se desmonta
-                return () => {
-                    // Añadir cualquier limpieza necesaria para el juego
+ 
+                return () => { 
                     if (game && typeof game.cleanup === 'function') {
                         game.cleanup();
                     }
@@ -121,13 +143,73 @@ const GameCanvas = () => {
                 setError(`Error initializing game: ${error.message}`);
             }
         }
-    }, [canvasRef, statsRef, fpsMeterRef, messagesRef, gameInitialized]);
+    }, [canvasRef, statsRef, fpsMeterRef, messagesRef, gameInitialized, showMenu, showSelectionScreen, selectedImage, playMusic]);
 
     const handleMusicToggle = (e) => {
-        setPlayMusic(e.target.checked);
+        window.LP.audioEngine.stop("music-game");
+        window.LP.audioEngine.stop("start-game");
+        const newMusicState = e.target.checked;
+        setPlayMusic(newMusicState);
+        
         // Implementaremos esta función en el motor de audio
         if (window.LP && window.LP.audioEngine) {
-            window.LP.audioEngine.setMusic(e.target.checked);
+            window.LP.audioEngine.setMusic(newMusicState);
+            
+            // Si estamos en el menú, reproducir/detener la música del menú
+            if (showMenu) {
+                if (newMusicState) {
+                    window.LP.audioEngine.trigger("music-game");
+                } else {
+                    window.LP.audioEngine.stop("music-game");
+                }
+            } 
+            // Si estamos en el juego, reproducir/detener la música del juego
+            else if (!showSelectionScreen) {
+                if (newMusicState) {
+                    window.LP.audioEngine.trigger("start-game");
+                } else {
+                    window.LP.audioEngine.stop("start-game");
+                }
+            }
+        }
+    };
+
+    const handleStartClick = () => {
+        // Mostrar la pantalla de selección de imágenes
+        setShowMenu(false);
+        setShowSelectionScreen(true);
+        
+        // Detener la música del menú si está sonando
+        if (window.LP && window.LP.audioEngine) {
+            window.LP.audioEngine.stop("music-game");
+        }
+    };
+
+    const handleImageSelect = (imageSrc) => {
+        setSelectedImage(imageSrc);
+    };
+
+    const handleStartGame = () => {
+        // Ocultar la pantalla de selección y comenzar el juego
+        setShowSelectionScreen(false);
+        setGameInitialized(false); // Forzar la reinicialización del juego
+        
+        // Cambiar la música si está habilitada
+        if (playMusic && window.LP && window.LP.audioEngine) {
+            window.LP.audioEngine.stop("music-game");
+            window.LP.audioEngine.trigger("start-game");
+        }
+    };
+
+    const handleBackToMenu = () => {
+        // Volver al menú principal
+        setShowSelectionScreen(false);
+        setShowMenu(true);
+        
+        // Cambiar la música si está habilitada
+        if (playMusic && window.LP && window.LP.audioEngine) {
+            window.LP.audioEngine.stop("start-game");
+            window.LP.audioEngine.trigger("music-game");
         }
     };
 
@@ -144,7 +226,7 @@ const GameCanvas = () => {
                 <div className="game-controls">
                     <label className="music-toggle">
                         <input
-                        id="miCheckbox"
+                            id="miCheckbox"
                             type="checkbox" 
                             checked={playMusic} 
                             onChange={handleMusicToggle}
@@ -168,15 +250,51 @@ const GameCanvas = () => {
                     height="600"
                     className="game-canvas"
                 />
+                
+                {/* Menú de inicio */}
+                {showMenu && (
+                    <div className="start-menu"> 
+                        <button className="start-button pulse" onClick={handleStartClick}>
+                            PLAY
+                        </button>
+                    </div>
+                )}
+                
+                {/* Pantalla de selección de imágenes */}
+                {showSelectionScreen && (
+                    <div className="selection-overlay">
+                        <h2 className="selection-title">Selecciona una imagen</h2>
+                        <div className="image-grid">
+                            {imageOptions.map((image) => (
+                                <div 
+                                    key={image.id}
+                                    className={`image-option ${selectedImage === image.src ? 'selected' : ''}`}
+                                    onClick={() => handleImageSelect(image.src)}
+                                >
+                                    <img src={image.src} alt={image.name} />
+                                    <div className="image-name">{image.name}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="selection-buttons">
+                            <button className="selection-button" onClick={handleStartGame}>
+                                Comenzar
+                            </button>
+                            <button className="selection-button cancel" onClick={handleBackToMenu}>
+                                Volver
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="game-instructions">
                 <h3>Cómo jugar:</h3>
                 <ul>
-                    <li>Usar <span className="key">↑</span> <span className="key">↓</span> <span className="key">←</span> <span className="key">→</span> para moeverte</li>
+                    <li>Usar <span className="key">↑</span> <span className="key">↓</span> <span className="key">←</span> <span className="key">→</span> para moverte</li>
                     <li>Manten presionado <span className="key">SPACE</span> para dibujar</li>
                     <li>Revela el 80% de la imagen para ganar</li>
-                    <li>Esquiva los enemigos mientras dibujar</li>
+                    <li>Esquiva los enemigos mientras dibujas</li>
                 </ul>
             </div>
         </div>
