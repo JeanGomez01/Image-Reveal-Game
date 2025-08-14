@@ -22,7 +22,7 @@ export const createPlayer = (options, myProps = {}) => {
     // Player specific properties
     that.lives = options.lives || 3;
     that.points = 0;
-    
+
     // Movement direction tracking (for restricting diagonal movement)
     let currentMoveDirection = null; // 'horizontal', 'vertical', or null
 
@@ -53,7 +53,7 @@ export const createPlayer = (options, myProps = {}) => {
 
     const playerCanvas = createCanvas(that.canvasW, that.canvasH);
     const ctxPlayer = playerCanvas.getContext('2d');
-    
+
     // Asegurarse de que el tamaño del mapa sea correcto
     const mapSize = that.canvasW * that.canvasH;
     const map = new Array(mapSize);
@@ -67,7 +67,7 @@ export const createPlayer = (options, myProps = {}) => {
     try {
         // Obtener los datos de imagen con el tamaño correcto
         imgData = ctxPlayer.getImageData(0, 0, that.canvasW, that.canvasH);
-        
+
         // Verificar que el tamaño de imgData.data es correcto (4 bytes por pixel)
         if (imgData.data.length !== mapSize * 4) {
             console.error("imgData size mismatch:", imgData.data.length, "expected:", mapSize * 4);
@@ -110,7 +110,7 @@ export const createPlayer = (options, myProps = {}) => {
         // Determinar la dirección de movimiento basada en las teclas presionadas
         let wantsToMoveHorizontal = input.left || input.right;
         let wantsToMoveVertical = input.up || input.down;
-        
+
         // Si no hay dirección actual y el jugador quiere moverse en ambas direcciones,
         // priorizar el movimiento horizontal
         if (currentMoveDirection === null) {
@@ -119,10 +119,10 @@ export const createPlayer = (options, myProps = {}) => {
             } else if (wantsToMoveVertical) {
                 currentMoveDirection = 'vertical';
             }
-        } 
+        }
         // Si el jugador deja de presionar teclas en la dirección actual, permitir cambiar de dirección
         else if ((currentMoveDirection === 'horizontal' && !wantsToMoveHorizontal) ||
-                 (currentMoveDirection === 'vertical' && !wantsToMoveVertical)) {
+            (currentMoveDirection === 'vertical' && !wantsToMoveVertical)) {
             if (wantsToMoveHorizontal) {
                 currentMoveDirection = 'horizontal';
             } else if (wantsToMoveVertical) {
@@ -156,7 +156,7 @@ export const createPlayer = (options, myProps = {}) => {
         // Asegurarse de que los índices estén dentro de los límites
         const prevIndex = Math.min(Math.floor(that.previousY) * that.canvasW + Math.floor(that.previousX), map.length - 1);
         const currIndex = Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1);
-        
+
         const previousPoint = map[prevIndex];
         const currentPoint = map[currIndex];
 
@@ -310,7 +310,7 @@ export const createPlayer = (options, myProps = {}) => {
     };
 
     // Check collision with enemies
-    const checkCollision = (badguyHitbox, tFrame) => {
+    const checkCollision = (badguyHitbox, tFrame, type = "") => {
         if (!isFiring || haveJustDied ||
             (!helpers.areColliding(that.getHitbox(), badguyHitbox) &&
                 !isCollidingTemporalPath(badguyHitbox))) return false;
@@ -323,7 +323,7 @@ export const createPlayer = (options, myProps = {}) => {
         respawn();
 
         if (window.LP && window.LP.engine) {
-            window.LP.engine.showMessage("Ouch!");
+            window.LP.engine.showMessage("Ouch!" + type);
         }
 
         if (window.LP && window.LP.audioEngine) {
@@ -360,9 +360,9 @@ export const createPlayer = (options, myProps = {}) => {
         for (let x = 0; x < that.canvasW; x++) {
             for (let y = 0; y < that.canvasH; y++) {
                 // Si el pixel está en el borde (dentro del ancho especificado)
-                if (x < borderWidth || x >= that.canvasW - borderWidth || 
+                if (x < borderWidth || x >= that.canvasW - borderWidth ||
                     y < borderWidth || y >= that.canvasH - borderWidth) {
-                    
+
                     const index = y * that.canvasW + x;
                     if (index >= 0 && index < map.length) {
                         map[index] = 'E'; // Marcar como vacío
@@ -377,25 +377,25 @@ export const createPlayer = (options, myProps = {}) => {
             // Borde superior e inferior
             const topIndex = borderWidth * that.canvasW + x;
             const bottomIndex = (that.canvasH - borderWidth - 1) * that.canvasW + x;
-            
+
             if (topIndex >= 0 && topIndex < map.length) {
                 map[topIndex] = 'P';
             }
-            
+
             if (bottomIndex >= 0 && bottomIndex < map.length) {
                 map[bottomIndex] = 'P';
             }
         }
-        
+
         for (let y = borderWidth; y < that.canvasH - borderWidth; y++) {
             // Borde izquierdo y derecho
             const leftIndex = y * that.canvasW + borderWidth;
             const rightIndex = y * that.canvasW + (that.canvasW - borderWidth - 1);
-            
+
             if (leftIndex >= 0 && leftIndex < map.length) {
                 map[leftIndex] = 'P';
             }
-            
+
             if (rightIndex >= 0 && rightIndex < map.length) {
                 map[rightIndex] = 'P';
             }
@@ -531,15 +531,15 @@ export const createPlayer = (options, myProps = {}) => {
 
         while (pixelStack.length > 0) {
             const current = pixelStack.pop();
-            
+
             // Verificar que las coordenadas están dentro de los límites
-            if (current.x < 0 || current.x >= mapWidth || 
+            if (current.x < 0 || current.x >= mapWidth ||
                 current.y < 0 || current.y >= mapData.length / mapWidth) {
                 continue;
             }
-            
+
             const index = current.y * mapWidth + current.x;
-            
+
             // Verificar que el índice está dentro de los límites
             if (index < 0 || index >= mapData.length) {
                 continue;
@@ -580,12 +580,12 @@ export const createPlayer = (options, myProps = {}) => {
         for (y = 0; y < mapHeight; y++) {
             for (x = 0; x < mapWidth; x++) {
                 const index = (x + y * mapWidth);
-                
+
                 // Verificar que el índice está dentro de los límites
                 if (index < 0 || index >= mapData.length) {
                     continue;
                 }
-                
+
                 const pixel = mapData[index];
 
                 // We want to detect edges from the area with innerVal to the outside
@@ -669,6 +669,7 @@ export const createPlayer = (options, myProps = {}) => {
         that.x = lastPathX;
         that.y = lastPathY;
         currentMoveDirection = null; // Resetear la dirección de movimiento al respawn
+        console.log("Respawned at:", that.x, that.y);
     };
 
     // Add points based on area cleared

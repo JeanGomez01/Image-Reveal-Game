@@ -16,7 +16,7 @@ const GameCanvas = () => {
     const statsRef = useRef(null);
     const fpsMeterRef = useRef(null);
     const messagesRef = useRef(null);
-    const [playMusic, setPlayMusic] = useState(true);
+    const [playMusic, setPlayMusic] = useState(false);
     const [gameInitialized, setGameInitialized] = useState(false);
     const [error, setError] = useState(null);
 
@@ -140,15 +140,16 @@ const GameCanvas = () => {
             )}
 
             <div className="game-header">
-                <h1 className="game-title">Image Reveal</h1>
+                <h1 className="game-title">AI Image Reveal</h1>
                 <div className="game-controls">
                     <label className="music-toggle">
-                        <input 
+                        <input
+                        id="miCheckbox"
                             type="checkbox" 
                             checked={playMusic} 
                             onChange={handleMusicToggle}
                         />
-                        <span style={{marginLeft: "5px"}}>Music</span>
+                        <span style={{marginLeft: "5px"}}>Música</span>
                     </label>
                 </div>
             </div>
@@ -170,12 +171,12 @@ const GameCanvas = () => {
             </div>
 
             <div className="game-instructions">
-                <h3>How to Play:</h3>
+                <h3>Cómo jugar:</h3>
                 <ul>
-                    <li>Use <span className="key">↑</span> <span className="key">↓</span> <span className="key">←</span> <span className="key">→</span> to move</li>
-                    <li>Hold <span className="key">SPACE</span> to draw</li>
-                    <li>Reveal 80% of the image to win!</li>
-                    <li>Avoid enemies while drawing</li>
+                    <li>Usar <span className="key">↑</span> <span className="key">↓</span> <span className="key">←</span> <span className="key">→</span> para moeverte</li>
+                    <li>Manten presionado <span className="key">SPACE</span> para dibujar</li>
+                    <li>Revela el 80% de la imagen para ganar</li>
+                    <li>Esquiva los enemigos mientras dibujar</li>
                 </ul>
             </div>
         </div>

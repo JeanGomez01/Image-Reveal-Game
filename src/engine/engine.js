@@ -117,10 +117,14 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             resetLevel();
         }
 
-        // Reproducir música si el motor de audio está disponible
-        if (window.LP && window.LP.audioEngine) {
-            window.LP.audioEngine.trigger("music-game");
-        }
+        // const checkbox = document.getElementById('miCheckbox');
+        // const isChecked = checkbox ? checkbox.checked : false;
+        // console.log('Checkbox encendido:', isChecked);
+        // if (isChecked && window.LP && window.LP.audioEngine) {
+        //     window.LP.audioEngine.stop("music-game");
+        //     window.LP.audioEngine.trigger("start-game");
+        // }
+
 
         // Cargar la imagen de fondo
         backgroundImgElement = new Image();
@@ -140,15 +144,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
             // Calcular el área total y el área inicial llena
             totalArea = canvasW * canvasH;
-            
+
             // Reiniciar el nivel y jugador con el nuevo tamaño
             if (player && typeof player.reset === 'function') {
                 player.reset({ canvasW, canvasH });
             }
-
-            // Inicialmente no iniciamos el bucle del juego, esperamos a que el usuario presione Start
-            // gameLoopId = requestAnimationFrame(mainLoop);
-            
             // Mostrar el menú de inicio
             showStartMenu();
         };
@@ -165,49 +165,43 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         // Limpiar el canvas
         c2d.fillStyle = 'rgba(0, 0, 0, 0.7)';
         c2d.fillRect(0, 0, canvasW, canvasH);
-        
+
         // Dibujar el fondo del juego con opacidad reducida
         renderBackground(0.3);
-        
+
         // Dibujar el título
         c2d.fillStyle = '#FF8800';
         c2d.font = 'bold 16px "Press Start 2P", monospace';
         c2d.textAlign = 'center';
-    
+
         // Dibujar el botón de inicio
-        const btnWidth = 80;
+        const btnWidth = 100;
         const btnHeight = 30;
         const btnX = (canvasW - btnWidth) / 2;
         const btnY = canvasH / 2;
-        
+
         // Botón con efecto de brillo
         c2d.fillStyle = '#4CAF50';
         c2d.fillRect(btnX, btnY, btnWidth, btnHeight);
         c2d.fillStyle = '#2E7D32';
         c2d.fillRect(btnX + 2, btnY + 2, btnWidth - 4, btnHeight - 4);
-        
+
         // Texto del botón
         c2d.fillStyle = '#FFFFFF';
         c2d.font = 'bold 12px "Press Start 2P", monospace';
-        c2d.fillText('START', canvasW / 2, btnY + btnHeight / 2 + 4);
-        
-        // Instrucciones
-        c2d.fillStyle = '#FFFFFF';
-        c2d.font = '6px "Press Start 2P", monospace';
-        c2d.fillText('Use arrow keys to move', canvasW / 2, canvasH * 0.7);
-        c2d.fillText('Hold SPACE to draw', canvasW / 2, canvasH * 0.75);
-        c2d.fillText('Reveal 80% to win!', canvasW / 2, canvasH * 0.8);
-        
+        c2d.fillText('Empezar', canvasW / 2, btnY + btnHeight / 2 + 4);
+
+
         // Añadir evento de clic para iniciar el juego
         const handleClick = (e) => {
             // Convertir coordenadas del clic a coordenadas del canvas
             const rect = canvasElement.getBoundingClientRect();
             const scaleX = canvasElement.width / rect.width;
             const scaleY = canvasElement.height / rect.height;
-            
+
             const x = (e.clientX - rect.left) * scaleX / 2; // Dividir por 2 debido al scale(2, 2)
             const y = (e.clientY - rect.top) * scaleY / 2;
-            
+
             // Verificar si el clic fue en el botón
             if (x >= btnX && x <= btnX + btnWidth && y >= btnY && y <= btnY + btnHeight) {
                 // Iniciar el juego
@@ -216,9 +210,9 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 canvasElement.removeEventListener('click', handleClick);
             }
         };
-        
+
         canvasElement.addEventListener('click', handleClick);
-        
+
         // También permitir iniciar con la tecla Enter o Espacio
         const handleKeyDown = (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -226,10 +220,10 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 window.removeEventListener('keydown', handleKeyDown);
             }
         };
-        
+
         window.addEventListener('keydown', handleKeyDown);
     };
-    
+
     // Iniciar el juego
     const startGame = () => {
         if (!gameStarted) {
@@ -239,9 +233,14 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             // Iniciar el bucle del juego
             gameLoopId = requestAnimationFrame(mainLoop);
             // Reproducir sonido de inicio si está disponible
-            if (window.LP && window.LP.audioEngine) {
+            const checkbox = document.getElementById('miCheckbox');
+            const isChecked = checkbox ? checkbox.checked : false;
+            console.log('Checkbox encendido:', isChecked);
+            if (isChecked && window.LP && window.LP.audioEngine) {
+                window.LP.audioEngine.stop("music-game");
                 window.LP.audioEngine.trigger("start-game");
             }
+
         }
     };
 
@@ -250,7 +249,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         if (player && typeof player.getFilledMapPoints === 'function') {
             const filledPoints = player.getFilledMapPoints();
             filledArea = filledPoints.length;
-            
+
             // Calcular el porcentaje de área limpiada
             if (totalArea > 0) {
                 clearedPercentage = Math.round(((totalArea - filledArea) / totalArea) * 100);
@@ -345,6 +344,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         try {
             if (typeof createCircleEnemy === 'function') {
                 enemies.push(createCircleEnemy(enemyOptions));
+                enemies.push(createCircleEnemy(enemyOptions));
             }
 
             if (typeof createCircleBumper === 'function') {
@@ -354,7 +354,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         } catch (error) {
             console.error("Error creating enemies:", error);
         }
-        
+
         // Actualizar el área llena después de resetear
         updateFilledArea();
     };
@@ -385,7 +385,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
 
         player.update(tFrame, tFrame - lastFrameTime);
-        
+
         // Actualizar el área llena y el porcentaje cada cierto tiempo
         if (tFrame - lastStatsUpdateTime > 1000) {
             updateFilledArea();
@@ -417,7 +417,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     const renderBackground = (opacity = 1.0) => {
         // Procesar la imagen para asegurar un ratio 1:1
         const img = backgroundImgElement;
-        
+
         if (!img || !img.complete) {
             // Si la imagen no está cargada, dibuja un fondo de color
             c2d.fillStyle = '#000000';
@@ -427,7 +427,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
         // Guardar el estado actual del contexto
         c2d.save();
-        
+
         // Establecer la opacidad
         c2d.globalAlpha = opacity;
 
@@ -435,14 +435,14 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         const size = Math.min(img.width, img.height);
         const sx = (img.width - size) / 2;
         const sy = (img.height - size) / 2;
-        
+
         // Dibujar la imagen recortada para mantener ratio 1:1
         c2d.drawImage(
             img,
             sx, sy, size, size,  // Recortar la imagen a un cuadrado
             0, 0, canvasW, canvasH  // Dibujar en todo el canvas
         );
-        
+
         // Restaurar el estado del contexto
         c2d.restore();
     };
