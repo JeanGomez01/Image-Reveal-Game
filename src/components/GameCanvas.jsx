@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from "react";
 import "./ImageSelection.css";
 import ImageCarousel from "./ImageCarousel";
 import ImageUploader from "./ImageUploader";
+import WinScreen from "./WinScreen";
+import GameOverScreen from "./GameOverScreen";
 
 // Importar el módulo de inicialización del juego con sintaxis ES6
 import { initGame } from "../engine/engine";
@@ -29,6 +31,8 @@ const GameCanvas = () => {
   const [gameInstance, setGameInstance] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [customImages, setCustomImages] = useState([]);
+  const [showWinScreen, setShowWinScreen] = useState(false);
+  const [showGameOverScreen, setShowGameOverScreen] = useState(false);
 
   // Opciones de imágenes disponibles
   const defaultImages = [
@@ -139,11 +143,32 @@ const GameCanvas = () => {
       !showMenu &&
       !showSelectionScreen &&
       !gameInitialized &&
+      !showWinScreen &&
+      !showGameOverScreen &&
       canvasRef.current
     ) {
       initializeGame();
     }
-  }, [showMenu, showSelectionScreen, gameInitialized, canvasRef.current]);
+  }, [
+    showMenu,
+    showSelectionScreen,
+    gameInitialized,
+    showWinScreen,
+    showGameOverScreen,
+    canvasRef.current,
+  ]);
+
+  // Callback para cuando el jugador gana
+  const handleWin = () => {
+    console.log("Player won!");
+    setShowWinScreen(true);
+  };
+
+  // Callback para cuando el jugador pierde
+  const handleGameOver = () => {
+    console.log("Game over!");
+    setShowGameOverScreen(true);
+  };
 
   // Inicializar el juego
   const initializeGame = async () => {
@@ -187,7 +212,9 @@ const GameCanvas = () => {
         fpsMeterRef.current,
         messagesRef.current,
         selectedImage,
-        playMusic
+        playMusic,
+        handleWin,
+        handleGameOver
       );
 
       console.log("Game initialized:", game);
@@ -233,7 +260,7 @@ const GameCanvas = () => {
         }
       }
       // Si estamos en el juego, reproducir/detener la música del juego
-      else {
+      else if (!showWinScreen && !showGameOverScreen) {
         if (newMusicState) {
           window.LP.audioEngine.trigger("start-game");
         } else {
@@ -284,6 +311,8 @@ const GameCanvas = () => {
     setShowSelectionScreen(false);
     setShowUploader(false);
     setShowMenu(true);
+    setShowWinScreen(false);
+    setShowGameOverScreen(false);
 
     // Cambiar la música si está habilitada
     if (playMusic && window.LP && window.LP.audioEngine) {
@@ -319,6 +348,42 @@ const GameCanvas = () => {
 
     // Seleccionar automáticamente la nueva imagen
     setSelectedImage(newImage.src);
+  };
+
+  const handleRestartFromWin = () => {
+    setShowWinScreen(false);
+    setShowMenu(true);
+
+    // Limpiar el juego si está inicializado
+    if (gameInstance && typeof gameInstance.cleanup === "function") {
+      gameInstance.cleanup();
+      setGameInstance(null);
+      setGameInitialized(false);
+    }
+
+    // Cambiar la música si está habilitada
+    if (playMusic && window.LP && window.LP.audioEngine) {
+      window.LP.audioEngine.stop("start-game");
+      window.LP.audioEngine.trigger("music-game");
+    }
+  };
+
+  const handleRestartFromGameOver = () => {
+    setShowGameOverScreen(false);
+    setShowMenu(true);
+
+    // Limpiar el juego si está inicializado
+    if (gameInstance && typeof gameInstance.cleanup === "function") {
+      gameInstance.cleanup();
+      setGameInstance(null);
+      setGameInitialized(false);
+    }
+
+    // Cambiar la música si está habilitada
+    if (playMusic && window.LP && window.LP.audioEngine) {
+      window.LP.audioEngine.stop("start-game");
+      window.LP.audioEngine.trigger("music-game");
+    }
   };
 
   return (
@@ -405,28 +470,53 @@ const GameCanvas = () => {
             />
           </div>
         )}
-      </div>
 
-      <div className="game-instructions">
-        <h3>Cómo jugar:</h3>
-        <ul>
-          <li>
-            Usar <span className="key">↑</span> <span className="key">↓</span>{" "}
-            <span className="key">←</span> <span className="key">→</span> para
-            moverte
-          </li>
-          <li>
-            Manten presionado <span className="key">ESPACIO</span> para dibujar
-          </li>
-          <li>Revela el 80% de la imagen para ganar</li>
-          <li>Esquiva los enemigos mientras dibujas</li>
-        </ul>
-        {!showMenu && !showSelectionScreen && (
-          <button className="selection-button back" onClick={handleBackToMenu}>
-            VOLVER AL MENÚ
-          </button>
+        {/* Pantalla de victoria */}
+        {showWinScreen && (
+          <WinScreen
+            onRestart={handleRestartFromWin}
+            imageUrl={selectedImage}
+          />
+        )}
+
+        {/* Pantalla de game over */}
+        {showGameOverScreen && (
+          <GameOverScreen
+            onRestart={handleRestartFromGameOver}
+            imageUrl={selectedImage}
+          />
         )}
       </div>
+
+      {
+        <div className="game-instructions">
+          <h3>Cómo jugar:</h3>
+          <ul>
+            <li>
+              Usar <span className="key">↑</span> <span className="key">↓</span>{" "}
+              <span className="key">←</span> <span className="key">→</span> para
+              moverte
+            </li>
+            <li>
+              Manten presionado <span className="key">ESPACIO</span> para
+              dibujar
+            </li>
+            <li>Revela el 80% de la imagen para ganar</li>
+            <li>Esquiva los enemigos mientras dibujas</li>
+          </ul>
+          {!showMenu &&
+            !showSelectionScreen &&
+            !showWinScreen &&
+            !showGameOverScreen && (
+              <button
+                className="selection-button back"
+                onClick={handleBackToMenu}
+              >
+                VOLVER AL MENÚ
+              </button>
+            )}
+        </div>
+      }
     </div>
   );
 };

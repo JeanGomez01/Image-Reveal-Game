@@ -20,7 +20,7 @@ const defaultHelpers = {
 // We'll need to include this library in our HTML or import it
 const FPSMeter = window.FPSMeter;
 
-export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement, selectedImage = 'image.png', musicEnabled = true) => {
+export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement, selectedImage = 'image.png', musicEnabled = true, onWin = null, onGameOver = null) => {
     // Create the game engine object
     const engine = {};
 
@@ -194,11 +194,18 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         console.log("Player died");
         engine.showMessage("You died :(");
 
+        // Detener la música del juego
         if (audioEngine && musicEnabled) {
-            audioEngine.trigger("game-over");
+            audioEngine.stop("start-game");
+            audioEngine.stop("music-game");
         }
 
-        resetLevel();
+        // Notificar al componente React que el jugador ha muerto
+        if (typeof onGameOver === 'function') {
+            onGameOver();
+        }
+        
+        // No resetear el nivel inmediatamente, se hará después de la animación
     };
 
     engine.areaCleared = (percentage) => {
@@ -209,11 +216,18 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             console.log("Win!");
             engine.showMessage("You win!");
 
+            // Detener la música del juego
             if (audioEngine && musicEnabled) {
-                audioEngine.trigger("win");
+                audioEngine.stop("start-game");
+                audioEngine.stop("music-game");
             }
 
-            resetLevel();
+            // Notificar al componente React que el jugador ha ganado
+            if (typeof onWin === 'function') {
+                onWin();
+            }
+            
+            // No resetear el nivel inmediatamente, se hará después de la animación
         }
 
         if (clearedPercentage >= nextAddTimePercentage) {
