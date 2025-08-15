@@ -39,7 +39,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     let clearedPercentage = 0;
     let totalArea = 0;
     let filledArea = 0;
-    let remainingTime = 180;
+    let remainingTime = 100;
     let lastFrameTime = 0;
     let lastRemaningTimeFrameTime = 0;
     let backgroundImgElement;
@@ -63,11 +63,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
         if (typeof initAudioEngine === 'function') {
             audioEngine = initAudioEngine();
-            
+
             // Configurar el estado inicial de la música
             if (audioEngine) {
                 audioEngine.setMusic(musicEnabled);
-                
+
                 // Reproducir la música del juego si está habilitada
                 if (musicEnabled) {
                     audioEngine.trigger('start-game');
@@ -151,7 +151,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             if (player && typeof player.reset === 'function') {
                 player.reset({ canvasW, canvasH });
             }
-            
+
             // Iniciar el juego
             startGame();
         };
@@ -160,7 +160,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             // Iniciar el juego incluso si la imagen falla
             startGame();
         };
-        
+
         // Usar la imagen seleccionada
         console.log("Loading image:", selectedImage);
         backgroundImgElement.src = selectedImage;
@@ -193,11 +193,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     engine.playerDied = () => {
         console.log("Player died");
         engine.showMessage("You died :(");
-        
+
         if (audioEngine && musicEnabled) {
             audioEngine.trigger("game-over");
         }
-        
+
         resetLevel();
     };
 
@@ -208,11 +208,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         if (clearedPercentage >= 80) {
             console.log("Win!");
             engine.showMessage("You win!");
-            
+
             if (audioEngine && musicEnabled) {
                 audioEngine.trigger("win");
             }
-            
+
             resetLevel();
         }
 
@@ -220,11 +220,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             remainingTime += 30;
             nextAddTimePercentage += 10; // We add time each 10 now
             engine.showMessage("Extra time!");
-            
-            if (audioEngine && musicEnabled) {
-                audioEngine.trigger("extra-time");
-            }
-            
+
+
+            audioEngine.trigger("extra-time");
+
+
             console.log("Extra time added");
         }
 
@@ -317,7 +317,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 engine.playerDied();
             } else if (remainingTime === 30) {
                 engine.showMessage("Hurry up!!");
-                
+
                 if (audioEngine && musicEnabled) {
                     audioEngine.trigger("hurry");
                 }

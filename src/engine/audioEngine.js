@@ -20,12 +20,15 @@ export const initAudioEngine = () => {
     // Sound effects mapping
     const sounds = {
         'music-game': { url: 'sounds/523725__mrthenoronha__8-bit-water-stage-loop.mp3', loop: true, volume: 0.5, category: 'music' },
-        'start-game': { url: 'sounds/520937__mrthenoronha__8-bit-game-intro-loop.mp3', loop: true, volume: 0.5, category: 'music' },
-        'game-over': { url: 'https://freesound.org/data/previews/362/362205_6629861-lq.mp3', loop: false, volume: 0.8, category: 'sfx' },
-        'win': { url: 'https://freesound.org/data/previews/456/456966_9652915-lq.mp3', loop: false, volume: 0.8, category: 'sfx' },
-        'extra-time': { url: 'https://freesound.org/data/previews/264/264828_5052308-lq.mp3', loop: false, volume: 0.8, category: 'sfx' },
+        'start-game': { url: 'sounds/520937__mrthenoronha__8-bit-game-intro-loop.mp3', loop: true, volume: 0.4, category: 'music' },
+        // 'start-game': { url: 'sounds/8-bit-loop-189494.mp3', loop: true, volume: 0.3, category: 'music' }, //Version alternativa
+        'game-over': { url: 'sounds/game-over-38511.mp3', loop: false, volume: 0.8, category: 'sfx' },
+        'win': { url: 'sounds/518308__mrthenoronha__win8-bit.wav', loop: false, volume: 0.8, category: 'sfx' },
+        'extra-time': { url: 'sounds/extra-time-6104.mp3', loop: false, volume: 0.8, category: 'sfx' },
         'hurry': { url: 'sounds/518304__mrthenoronha__hurry-up-8-bit.wav', loop: false, volume: 0.8, category: 'sfx' },
-        'touched': { url: 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3', loop: false, volume: 0.8, category: 'sfx' }
+        'touched': { url: 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3', loop: false, volume: 0.8, category: 'sfx' },
+        'touch-image': { url: 'https://freesound.org/data/previews/242/242857_4284968-lq.mp3', loop: false, volume: 0.6, category: 'sfx' },
+        'slide': { url: 'sounds/624842__mr_fox21__dia-image-slide.wav', loop: false, volume: 0.8, category: 'sfx' }
     };
 
     // Audio elements cache

@@ -21,6 +21,74 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+/* Estilos para el carrusel */
+.image-carousel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.carousel-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.carousel-nav {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.carousel-nav:hover:not(.disabled) {
+    background-color: #FF8800;
+    transform: scale(1.1);
+}
+
+.carousel-nav.disabled {
+    background-color: #555;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.carousel-pagination {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.pagination-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #555;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pagination-dot.active {
+    background-color: #FF8800;
+    transform: scale(1.2);
+}
+
+.pagination-dot:hover:not(.active) {
+    background-color: #777;
+}
+
 .image-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -89,13 +157,97 @@
     transition: all 0.3s ease;
 }
 
-.selection-button:hover {
+.selection-button:hover:not(:disabled) {
     background-color: #FF8800;
     transform: scale(1.05);
 }
 
+.selection-button:disabled {
+    background-color: #555;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .selection-button.cancel {
     background-color: #f44336;
+}
+.selection-button.back {
+    background-color: #f44336;
+}
+
+/* Estilos para el cargador de imágenes */
+.image-uploader {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.uploader-title {
+    color: #FF8800;
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.uploader-error {
+    color: #f44336;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.drop-zone {
+    width: 100%;
+    height: 200px;
+    border: 3px dashed #4CAF50;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.drop-zone.active {
+    border-color: #FF8800;
+    background-color: rgba(255, 136, 0, 0.1);
+}
+
+.drop-zone.has-preview {
+    padding: 10px;
+}
+
+.drop-zone-content {
+    text-align: center;
+    padding: 20px;
+}
+
+.drop-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.drop-zone-hint {
+    font-size: 12px;
+    color: #888;
+    margin-top: 10px;
+}
+
+.image-preview {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+}
+
+.uploader-buttons {
+    display: flex;
+    gap: 20px;
 }
 
 /* Estilos para el menú de inicio */
@@ -158,4 +310,58 @@
 
 .pulse {
     animation: pulse 2s infinite;
+}
+
+/* Botón de subir imagen */
+.upload-button {
+    background-color: #2196F3;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-button:hover {
+    background-color: #0b7dda;
+}
+
+.upload-icon {
+    font-size: 18px;
+}
+
+/* Pantalla de carga */
+.loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+.loading-text {
+    color: #FF8800;
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 136, 0, 0.3);
+    border-radius: 50%;
+    border-top-color: #FF8800;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

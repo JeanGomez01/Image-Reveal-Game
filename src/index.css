@@ -208,6 +208,9 @@ main {
   color: var(--retro-green);
   margin-right: 8px;
 }
+.selection-button-back { 
+  margin-right: 20px;
+}
 
 .key {
   display: inline-block;

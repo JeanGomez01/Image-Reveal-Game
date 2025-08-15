@@ -215,7 +215,8 @@ export const createPlayer = (options, myProps = {}) => {
 
                         // Debug output
                         for (let i = 0; i < map.length; i += that.canvasW) {
-                            that.log(map.slice(i, i + that.canvasW).join(""));
+                            //Descomentar por debug
+                            // that.log(map.slice(i, i + that.canvasW).join(""));
                         }
 
                         map[Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1)] = 'P';
@@ -323,7 +324,7 @@ export const createPlayer = (options, myProps = {}) => {
         respawn();
 
         if (window.LP && window.LP.engine) {
-            window.LP.engine.showMessage("Ouch!" + type);
+            window.LP.engine.showMessage("Ouch!");
         }
 
         if (window.LP && window.LP.audioEngine) {
@@ -347,8 +348,17 @@ export const createPlayer = (options, myProps = {}) => {
         haveJustDied = false;
         currentMoveDirection = null; // Resetear la dirección de movimiento
 
+        // Limpiar la caché de puntos del mapa para mejorar el rendimiento
+        clearMapPointsCache();
+
         // En lugar de generar una zona aleatoria, crear un borde limpio alrededor de toda la imagen
         createBorderPath();
+
+        // Optimización: Pre-renderizar el mapa inicial para mejorar el rendimiento
+        if (playerCanvas && ctxPlayer && imgData) {
+            // Forzar una actualización inicial del canvas con un tamaño de lote más pequeño
+            updatePlayerCanvasFromMap();
+        }
     };
 
     // Crear un borde limpio alrededor de toda la imagen
@@ -474,50 +484,62 @@ export const createPlayer = (options, myProps = {}) => {
                 return;
             }
 
-            for (let i = 0; i < map.length; i++) {
-                // Verificar que el índice es válido para data
-                const pixelIndex = i * 4;
-                if (pixelIndex + 3 >= dataLength) {
-                    // Saltarse este pixel si está fuera de los límites
-                    continue;
+            // Optimización: Procesar en lotes para mejorar el rendimiento
+            const batchSize = 5000; // Tamaño del lote
+            const totalPixels = map.length;
+            const batches = Math.ceil(totalPixels / batchSize);
+
+            for (let batch = 0; batch < batches; batch++) {
+                const start = batch * batchSize;
+                const end = Math.min(start + batchSize, totalPixels);
+
+                for (let i = start; i < end; i++) {
+                    // Verificar que el índice es válido para data
+                    const pixelIndex = i * 4;
+                    if (pixelIndex + 3 >= dataLength) {
+                        // Saltarse este pixel si está fuera de los límites
+                        continue;
+                    }
+
+                    switch (map[i]) {
+                        case 'E': // Empty
+                            data[pixelIndex + 3] = 0; // Transparent
+                            break;
+                        case 'F': // Filled
+                            data[pixelIndex] = 70; // Dark Blue with transparency
+                            data[pixelIndex + 1] = 70;
+                            data[pixelIndex + 2] = 70;
+                            data[pixelIndex + 3] = 200; // 40% opacity
+                            break;
+                        case 'P': // Path
+                            data[pixelIndex] = 255; // White, 100% opaque
+                            data[pixelIndex + 1] = 255;
+                            data[pixelIndex + 2] = 255;
+                            data[pixelIndex + 3] = 255;
+                            break;
+                        case 'T': // Temporal path
+                            data[pixelIndex] = 0; // Green, 100% opaque
+                            data[pixelIndex + 1] = 255;
+                            data[pixelIndex + 2] = 0;
+                            data[pixelIndex + 3] = 255;
+                            break;
+                        default:
+                            // Para cualquier otro valor, usar un color predeterminado
+                            data[pixelIndex] = 128; // Gris, 100% opaque
+                            data[pixelIndex + 1] = 128;
+                            data[pixelIndex + 2] = 128;
+                            data[pixelIndex + 3] = 255;
+                    }
                 }
 
-                switch (map[i]) {
-                    case 'E': // Empty
-                        data[pixelIndex + 3] = 0; // Transparent
-                        break;
-                    case 'F': // Filled
-                        data[pixelIndex] = 0; // Dark Blue, 100% opaque
-                        data[pixelIndex + 1] = 0;
-                        data[pixelIndex + 2] = 100;
-                        data[pixelIndex + 3] = 255;
-                        break;
-                    case 'P': // Path
-                        data[pixelIndex] = 255; // White, 100% opaque
-                        data[pixelIndex + 1] = 255;
-                        data[pixelIndex + 2] = 255;
-                        data[pixelIndex + 3] = 255;
-                        break;
-                    case 'T': // Temporal path
-                        data[pixelIndex] = 0; // Green, 100% opaque
-                        data[pixelIndex + 1] = 255;
-                        data[pixelIndex + 2] = 0;
-                        data[pixelIndex + 3] = 255;
-                        break;
-                    default:
-                        // Para cualquier otro valor, usar un color predeterminado
-                        data[pixelIndex] = 128; // Gris, 100% opaque
-                        data[pixelIndex + 1] = 128;
-                        data[pixelIndex + 2] = 128;
-                        data[pixelIndex + 3] = 255;
+                // Actualizar el canvas con los datos de imagen para este lote
+                if (batch === batches - 1) {
+                    try {
+                        ctxPlayer.putImageData(imgData, 0, 0);
+                    } catch (error) {
+                        console.error("Error putting image data:", error);
+                    }
                 }
-            }
-
-            // Actualizar el canvas con los datos de imagen
-            try {
-                ctxPlayer.putImageData(imgData, 0, 0);
-            } catch (error) {
-                console.error("Error putting image data:", error);
             }
         } catch (error) {
             console.error("Error in updatePlayerCanvasFromMap:", error);
