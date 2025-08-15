@@ -7,6 +7,8 @@ import { initAudioEngine } from './audioEngine';
 import { createPlayer } from '../actors/player';
 import { createCircleEnemy } from '../actors/circleEnemy';
 import { createCircleBumper } from '../actors/circleBumper';
+import { createSpriteEnemy } from '../actors/spriteEnemy';
+import { createFemaleEnemy } from '../actors/femaleEnemy';
 import { helpers } from './helpers';
 
 // Implementaciones predeterminadas en caso de error
@@ -204,7 +206,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         if (typeof onGameOver === 'function') {
             onGameOver();
         }
-        
+
         // No resetear el nivel inmediatamente, se hará después de la animación
     };
 
@@ -226,7 +228,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             if (typeof onWin === 'function') {
                 onWin();
             }
-            
+
             // No resetear el nivel inmediatamente, se hará después de la animación
         }
 
@@ -294,18 +296,35 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             canvasH: canvasH,
             player: player
         };
+        const enemySpriteOptions = {
+            canvasW: canvasW,
+            canvasH: canvasH,
+            player: player,
+            radius: 24,
+            speed: 0.8,
+        };
 
         // Verificar que las funciones de creación de enemigos existen
         try {
-            if (typeof createCircleEnemy === 'function') {
-                enemies.push(createCircleEnemy(enemyOptions));
-                enemies.push(createCircleEnemy(enemyOptions));
+            // Añadir enemigos con sprite animado
+            if (typeof createSpriteEnemy === 'function') {
+                enemies.push(createSpriteEnemy(enemySpriteOptions));
             }
 
-            if (typeof createCircleBumper === 'function') {
-                enemies.push(createCircleBumper(enemyOptions));
-                enemies.push(createCircleBumper(enemyOptions));
+            // Añadir enemigo femenino con 4 direcciones
+            if (typeof createFemaleEnemy === 'function') {
+                enemies.push(createFemaleEnemy(enemyOptions));
+                enemies.push(createFemaleEnemy(enemyOptions));
             }
+
+            // // Añadir enemigos circulares tradicionales
+            // if (typeof createCircleEnemy === 'function') {
+            //     enemies.push(createCircleEnemy(enemyOptions));
+            // }
+
+            // if (typeof createCircleBumper === 'function') {
+            //     enemies.push(createCircleBumper(enemyOptions));
+            // }
         } catch (error) {
             console.error("Error creating enemies:", error);
         }
