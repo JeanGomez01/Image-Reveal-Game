@@ -493,9 +493,10 @@ const GameCanvas = () => {
           <h3>Cómo jugar:</h3>
           <ul>
             <li>
-              Usar <span className="key">↑</span> <span className="key">↓</span>{" "}
-              <span className="key">←</span> <span className="key">→</span> para
-              moverte
+              Usar <span className="key up">↑</span>{" "}
+              <span className="key down">↓</span>{" "}
+              <span className="key left">↑</span>{" "}
+              <span className="key right">↑</span> para moverte
             </li>
             <li>
               Manten presionado <span className="key">ESPACIO</span> para
