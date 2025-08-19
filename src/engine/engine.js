@@ -86,7 +86,8 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 canvasH: canvasH,
                 input: typeof getInput === 'function' ? getInput() : {},
                 x: 0, // esquina superior izquierda
-                y: 0
+                y: 0,
+                radius: 8
             });
 
             console.log("Player created:", player);

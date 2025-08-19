@@ -25,6 +25,47 @@ export const createPlayer = (options, myProps = {}) => {
 
     // Movement direction tracking (for restricting diagonal movement)
     let currentMoveDirection = null; // 'horizontal', 'vertical', or null
+    
+    // Direction facing (0: down, 1: right, 2: up, 3: left)
+    let currentDirection = 0;
+    
+    // Animation properties
+    const idleSprite = new Image();
+    idleSprite.src = 'assets/sprites/sunnyside_world_human_idle_movement_4_direction.png';
+    
+    const walkSprite = new Image();
+    walkSprite.src = 'assets/sprites/sunnyside_world_human_run_movement_4_direction.png';
+    
+    // Idle sprite: 4 rows x 4 columns
+    const idleRows = 4;
+    const idleCols = 4;
+    
+    // Walk sprite: 4 rows x 8 columns
+    const walkRows = 4;
+    const walkCols = 8;
+    
+    // Animation variables
+    let currentFrame = 0;
+    let frameCounter = 0;
+    const frameDelay = 6; // Velocidad de la animación
+    let isMoving = false;
+    
+    // Sprite dimensions (will be calculated when images load)
+    let idleFrameWidth = 0;
+    let idleFrameHeight = 0;
+    let walkFrameWidth = 0;
+    let walkFrameHeight = 0;
+    
+    // Wait for sprites to load
+    idleSprite.onload = () => {
+        idleFrameWidth = idleSprite.width / idleCols;
+        idleFrameHeight = idleSprite.height / idleRows;
+    };
+    
+    walkSprite.onload = () => {
+        walkFrameWidth = walkSprite.width / walkCols;
+        walkFrameHeight = walkSprite.height / walkRows;
+    };
 
     // Input reference
     const input = options.input;
@@ -110,6 +151,9 @@ export const createPlayer = (options, myProps = {}) => {
         // Determinar la dirección de movimiento basada en las teclas presionadas
         let wantsToMoveHorizontal = input.left || input.right;
         let wantsToMoveVertical = input.up || input.down;
+        
+        // Determinar si el jugador está en movimiento
+        isMoving = wantsToMoveHorizontal || wantsToMoveVertical;
 
         // Si no hay dirección actual y el jugador quiere moverse en ambas direcciones,
         // priorizar el movimiento horizontal
@@ -137,17 +181,36 @@ export const createPlayer = (options, myProps = {}) => {
             // Solo permitir movimiento horizontal
             if (input.left && that.x > 0) {
                 that.x = Math.max(0, that.x - that.speed);
+                currentDirection = 2; // Izquierda (tercera fila)
             }
             if (input.right && that.x < that.canvasW) {
                 that.x = Math.min(that.canvasW, that.x + that.speed);
+                currentDirection = 1; // Derecha (segunda fila)
             }
         } else if (currentMoveDirection === 'vertical') {
             // Solo permitir movimiento vertical
             if (input.up && that.y > 0) {
                 that.y = Math.max(0, that.y - that.speed);
+                currentDirection = 3; // Arriba (cuarta fila)
             }
             if (input.down && that.y < that.canvasH) {
                 that.y = Math.min(that.canvasH, that.y + that.speed);
+                currentDirection = 0; // Abajo (primera fila)
+            }
+        }
+        
+        // Actualizar la animación
+        if (isMoving) {
+            frameCounter++;
+            if (frameCounter >= frameDelay) {
+                currentFrame = (currentFrame + 1) % walkCols;
+                frameCounter = 0;
+            }
+        } else {
+            frameCounter++;
+            if (frameCounter >= frameDelay) {
+                currentFrame = (currentFrame + 1) % idleCols;
+                frameCounter = 0;
             }
         }
 
@@ -296,14 +359,50 @@ export const createPlayer = (options, myProps = {}) => {
                 console.error("Error drawing player canvas:", error);
             }
 
-            // Dibujar el jugador
+            // Dibujar el jugador con animación
             try {
                 canvasContext.globalAlpha = haveJustDied ? 0.5 : 1;
-                canvasContext.fillStyle = isFiring ? "orange" : "green";
-                canvasContext.fillRect(that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2);
+                
+                // Determinar qué sprite usar (idle o walk)
+                const sprite = isMoving ? walkSprite : idleSprite;
+                const spriteCols = isMoving ? walkCols : idleCols;
+                const frameWidth = isMoving ? walkFrameWidth : idleFrameWidth;
+                const frameHeight = isMoving ? walkFrameHeight : idleFrameHeight;
+                
+                // Cada dirección tiene su propia fila en el spritesheet
+                // 0: abajo, 1: derecha, 2: izquierda, 3: arriba
+                
+                // Solo dibujar si el sprite está cargado y las dimensiones son válidas
+                if (sprite.complete && frameWidth > 0 && frameHeight > 0) {
+                    // Calcular la posición del frame en el spritesheet
+                    const sx = currentFrame * frameWidth;
+                    const sy = currentDirection * frameHeight;
+                    
+                    // Guardar el estado actual del contexto
+                    canvasContext.save();
+                    
+                    // Dibujar el sprite normalmente
+                    canvasContext.drawImage(
+                        sprite,
+                        sx, sy, frameWidth, frameHeight,
+                        that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2
+                    );
+                    
+                    // Restaurar el estado del contexto
+                    canvasContext.restore();
+                } else {
+                    // Fallback: dibujar un rectángulo si el sprite no está listo
+                    canvasContext.fillStyle = isFiring ? "orange" : "green";
+                    canvasContext.fillRect(that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2);
+                }
+                
                 canvasContext.globalAlpha = 1;
             } catch (error) {
                 console.error("Error drawing player:", error);
+                
+                // Fallback: dibujar un rectángulo en caso de error
+                canvasContext.fillStyle = isFiring ? "orange" : "green";
+                canvasContext.fillRect(that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2);
             }
         } catch (error) {
             console.error("Error in player render:", error);
@@ -347,6 +446,12 @@ export const createPlayer = (options, myProps = {}) => {
         that.lives = 3;
         haveJustDied = false;
         currentMoveDirection = null; // Resetear la dirección de movimiento
+        
+        // Reset direction and animation
+        currentDirection = 0;
+        currentFrame = 0;
+        frameCounter = 0;
+        isMoving = false;
 
         // Limpiar la caché de puntos del mapa para mejorar el rendimiento
         clearMapPointsCache();
