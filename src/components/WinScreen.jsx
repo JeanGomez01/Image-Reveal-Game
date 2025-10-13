@@ -76,7 +76,7 @@ const WinScreen = ({ onRestart, imageUrl }) => {
 
       // Dibujar texto de victoria
       const fontSize = 40 + 20 * Math.sin(progress * Math.PI);
-      ctx.font = `${fontSize}px 'Press Start 2P', monospace`;
+      ctx.font = `${fontSize}px Poppins, Tahoma, Geneva, sans-serif`;
       ctx.fillStyle = "#FFD700"; // Dorado
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";

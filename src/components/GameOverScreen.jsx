@@ -78,7 +78,8 @@ const GameOverScreen = ({ onRestart, imageUrl }) => {
 
       // Dibujar texto de game over
       const fontSize = 40 + 10 * Math.sin(progress * Math.PI);
-      ctx.font = `${fontSize}px 'Press Start 2P', monospace`;
+      // ctx.font = 'Poppins, Tahoma, Geneva, sans-serif';
+      ctx.font = `${fontSize}px Poppins, Tahoma, Geneva, sans-serif`;
       ctx.fillStyle = "#FF0000"; // Rojo
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";

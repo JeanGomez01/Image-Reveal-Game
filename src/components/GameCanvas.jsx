@@ -19,7 +19,7 @@ if (typeof window !== "undefined") {
 const GameCanvas = () => {
   const canvasRef = useRef(null);
   const statsRef = useRef(null);
-  const fpsMeterRef = useRef(null);
+  const fpsMeterRef = useRef(0);
   const messagesRef = useRef(null);
   const [playMusic, setPlayMusic] = useState(false);
   const [gameInitialized, setGameInitialized] = useState(false);
@@ -33,6 +33,7 @@ const GameCanvas = () => {
   const [customImages, setCustomImages] = useState([]);
   const [showWinScreen, setShowWinScreen] = useState(false);
   const [showGameOverScreen, setShowGameOverScreen] = useState(false);
+  const [fullOpacity, setFullOpacity] = useState(false);
 
   // Opciones de imágenes disponibles
   const defaultImages = [
@@ -214,7 +215,8 @@ const GameCanvas = () => {
         selectedImage,
         playMusic,
         handleWin,
-        handleGameOver
+        handleGameOver,
+        fullOpacity
       );
 
       console.log("Game initialized:", game);
@@ -349,6 +351,13 @@ const GameCanvas = () => {
     // Seleccionar automáticamente la nueva imagen
     setSelectedImage(newImage.src);
   };
+  const handleFullOpacityToggle = (e) => {
+    const isChecked = e.target.checked;
+    setFullOpacity(isChecked);
+    console.log("Full opacity set to:", fullOpacity);
+    // window.LP.engine.setFullOpacity(isChecked);
+
+  };
 
   const handleRestartFromWin = () => {
     setShowWinScreen(false);
@@ -395,7 +404,21 @@ const GameCanvas = () => {
       )}
 
       <div className="game-header">
-        <h1 className="game-title">AI Image Reveal</h1>
+        <img
+          src="/logo-rivercon-adjusted.png"
+          alt="Logo del juego"
+          className="game-logo"
+        />
+
+        <div className="game-stats-container">
+        <div className="stats-messages-container">
+  <div id="fpsMeter" ref={fpsMeterRef} className="fps-meter"></div>
+          <div id="messages" ref={messagesRef} className="game-messages"></div>
+
+        </div>
+          <div id="stats" ref={statsRef} className="game-stats"></div>
+        </div>
+
         <div className="game-controls">
           <label className="music-toggle">
             <input
@@ -404,16 +427,20 @@ const GameCanvas = () => {
               checked={playMusic}
               onChange={handleMusicToggle}
             />
-            <span style={{ marginLeft: "5px" }}>Música</span>
+            <span>Música</span>
+          </label>
+          <label className="opacity-toggle">
+            <input
+              id="opacityCheckbox"
+              type="checkbox"
+              checked={fullOpacity}
+              onChange={handleFullOpacityToggle}
+            />
+            <span>Opacidad</span>
           </label>
         </div>
       </div>
 
-      <div className="game-stats-container">
-        <div id="fpsMeter" ref={fpsMeterRef} className="fps-meter"></div>
-        <div id="messages" ref={messagesRef} className="game-messages"></div>
-        <div id="stats" ref={statsRef} className="game-stats"></div>
-      </div>
 
       <div className="canvas-container">
         <canvas
@@ -490,8 +517,8 @@ const GameCanvas = () => {
 
       {
         <div className="game-instructions">
-          <h3>Cómo jugar:</h3>
-          <ul>
+          <h3 className="mb-0">Cómo jugar:</h3>
+          <ul className="instructions-list">
             <li>
               Usar <span className="key up">↑</span>{" "}
               <span className="key down">↓</span>{" "}

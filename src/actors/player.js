@@ -14,7 +14,7 @@ export const createPlayer = (options, myProps = {}) => {
     const my = {
         name: "player",
         ...myProps
-    };
+    }; 
 
     // Create base game object
     const that = createGameObject(options, my);
@@ -25,43 +25,43 @@ export const createPlayer = (options, myProps = {}) => {
 
     // Movement direction tracking (for restricting diagonal movement)
     let currentMoveDirection = null; // 'horizontal', 'vertical', or null
-    
+
     // Direction facing (0: down, 1: right, 2: up, 3: left)
     let currentDirection = 0;
-    
+
     // Animation properties
     const idleSprite = new Image();
     idleSprite.src = 'assets/sprites/sunnyside_world_human_idle_movement_4_direction.png';
-    
+
     const walkSprite = new Image();
     walkSprite.src = 'assets/sprites/sunnyside_world_human_run_movement_4_direction.png';
-    
+
     // Idle sprite: 4 rows x 4 columns
     const idleRows = 4;
     const idleCols = 4;
-    
+
     // Walk sprite: 4 rows x 8 columns
     const walkRows = 4;
     const walkCols = 8;
-    
+
     // Animation variables
     let currentFrame = 0;
     let frameCounter = 0;
     const frameDelay = 6; // Velocidad de la animación
     let isMoving = false;
-    
+
     // Sprite dimensions (will be calculated when images load)
     let idleFrameWidth = 0;
     let idleFrameHeight = 0;
     let walkFrameWidth = 0;
     let walkFrameHeight = 0;
-    
+
     // Wait for sprites to load
     idleSprite.onload = () => {
         idleFrameWidth = idleSprite.width / idleCols;
         idleFrameHeight = idleSprite.height / idleRows;
     };
-    
+
     walkSprite.onload = () => {
         walkFrameWidth = walkSprite.width / walkCols;
         walkFrameHeight = walkSprite.height / walkRows;
@@ -89,7 +89,7 @@ export const createPlayer = (options, myProps = {}) => {
         console.error("Invalid canvasH value:", that.canvasH);
         that.canvasH = 300; // Valor predeterminado ajustado para 600x600
     }
-
+ 
     console.log("Initializing player with canvas dimensions:", that.canvasW, "x", that.canvasH);
 
     const playerCanvas = createCanvas(that.canvasW, that.canvasH);
@@ -151,7 +151,7 @@ export const createPlayer = (options, myProps = {}) => {
         // Determinar la dirección de movimiento basada en las teclas presionadas
         let wantsToMoveHorizontal = input.left || input.right;
         let wantsToMoveVertical = input.up || input.down;
-        
+
         // Determinar si el jugador está en movimiento
         isMoving = wantsToMoveHorizontal || wantsToMoveVertical;
 
@@ -198,7 +198,7 @@ export const createPlayer = (options, myProps = {}) => {
                 currentDirection = 0; // Abajo (primera fila)
             }
         }
-        
+
         // Actualizar la animación
         if (isMoving) {
             frameCounter++;
@@ -362,32 +362,32 @@ export const createPlayer = (options, myProps = {}) => {
             // Dibujar el jugador con animación
             try {
                 canvasContext.globalAlpha = haveJustDied ? 0.5 : 1;
-                
+
                 // Determinar qué sprite usar (idle o walk)
                 const sprite = isMoving ? walkSprite : idleSprite;
                 const spriteCols = isMoving ? walkCols : idleCols;
                 const frameWidth = isMoving ? walkFrameWidth : idleFrameWidth;
                 const frameHeight = isMoving ? walkFrameHeight : idleFrameHeight;
-                
+
                 // Cada dirección tiene su propia fila en el spritesheet
                 // 0: abajo, 1: derecha, 2: izquierda, 3: arriba
-                
+
                 // Solo dibujar si el sprite está cargado y las dimensiones son válidas
                 if (sprite.complete && frameWidth > 0 && frameHeight > 0) {
                     // Calcular la posición del frame en el spritesheet
                     const sx = currentFrame * frameWidth;
                     const sy = currentDirection * frameHeight;
-                    
+
                     // Guardar el estado actual del contexto
                     canvasContext.save();
-                    
+
                     // Dibujar el sprite normalmente
                     canvasContext.drawImage(
                         sprite,
                         sx, sy, frameWidth, frameHeight,
                         that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2
                     );
-                    
+
                     // Restaurar el estado del contexto
                     canvasContext.restore();
                 } else {
@@ -395,11 +395,11 @@ export const createPlayer = (options, myProps = {}) => {
                     canvasContext.fillStyle = isFiring ? "orange" : "green";
                     canvasContext.fillRect(that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2);
                 }
-                
+
                 canvasContext.globalAlpha = 1;
             } catch (error) {
                 console.error("Error drawing player:", error);
-                
+
                 // Fallback: dibujar un rectángulo en caso de error
                 canvasContext.fillStyle = isFiring ? "orange" : "green";
                 canvasContext.fillRect(that.x - that.radius, that.y - that.radius, that.radius * 2, that.radius * 2);
@@ -446,7 +446,7 @@ export const createPlayer = (options, myProps = {}) => {
         that.lives = 3;
         haveJustDied = false;
         currentMoveDirection = null; // Resetear la dirección de movimiento
-        
+
         // Reset direction and animation
         currentDirection = 0;
         currentFrame = 0;
@@ -614,7 +614,7 @@ export const createPlayer = (options, myProps = {}) => {
                             data[pixelIndex] = 70; // Dark Blue with transparency
                             data[pixelIndex + 1] = 70;
                             data[pixelIndex + 2] = 70;
-                            data[pixelIndex + 3] = 200; // 40% opacity
+                            data[pixelIndex + 3] = that.fullOpacity ? 255 : 240; // Opacidad configurable 
                             break;
                         case 'P': // Path
                             data[pixelIndex] = 255; // White, 100% opaque
@@ -795,7 +795,7 @@ export const createPlayer = (options, myProps = {}) => {
         replaceValuesInMap('T', 'F');
         that.x = lastPathX;
         that.y = lastPathY;
-        currentMoveDirection = null; // Resetear la dirección de movimiento al respawn
+        currentMoveDirection = null; // Resetear la dirección de movimiento al respawn 
         console.log("Respawned at:", that.x, that.y);
     };
 

@@ -1,25 +1,27 @@
 :root {
-  --retro-black: #0a0a2a;
-  --retro-dark: #222034;
-  --retro-purple: #493c96;
-  --retro-blue: #4b80ca;
-  --retro-green: #00ff00;
-  --retro-yellow: #ffcd75;
-  --retro-orange: #ff8b33;
-  --retro-red: #e43b44;
-  --retro-pink: #ff00ff;
-  --retro-white: #f4f4f4;
+  /* Colores AgroExpo Perú - Tema Agrícola/Tecnológico */
+  --agro-green-primary: #4CAF50;
+  --agro-green-dark: #2E7D32;
+  --agro-green-light: #81C784;
+  --agro-yellow: #FFC107;
+  --agro-yellow-dark: #FFA000;
+  --agro-white: #FFFFFF;
+  --agro-gray-light: #F5F5F5;
+  --agro-gray-medium: #E0E0E0;
+  --agro-gray-dark: #424242;
+  --agro-black: #212121;
+  --agro-blue: #2196F3;
+  --agro-red: #F44336;
 }
 
 body {
   margin: 0;
-  font-family: 'Press Start 2P', monospace, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  /* font-family: 'Roboto', 'Segoe UI', 'Arial', sans-serif; */
+  font-family: 'Poppins','Tahoma','Geneva',sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--retro-black);
-  color: var(--retro-white);
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%);
+  color: var(--agro-black);
 }
 
 code {
@@ -29,19 +31,20 @@ code {
 
 .App {
   text-align: center;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Roboto', sans-serif;
 }
 
 .App-header {
-  background-color: var(--retro-black);
+  background: linear-gradient(135deg, var(--agro-green-primary) 0%, var(--agro-green-dark) 100%);
   padding: 20px;
-  color: var(--retro-yellow);
-  border-bottom: 4px solid var(--retro-purple);
+  color: var(--agro-white);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .App-header h1 {
   margin: 0;
-  text-shadow: 3px 3px 0 var(--retro-purple);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
 }
 
 main {
@@ -56,10 +59,10 @@ main {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  background-color: var(--retro-black);
-  border: 4px solid var(--retro-purple);
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(73, 60, 150, 0.6);
+  background-color: var(--agro-white);
+  border: none;
+  border-radius: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   padding: 20px;
   box-sizing: border-box;
 }
@@ -68,76 +71,115 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid var(--retro-purple);
+  margin-bottom: 2px;
+  padding-bottom: 2px; 
 }
 
 .game-title {
-  color: var(--retro-yellow);
-  font-size: 24px;
+  color: var(--agro-green-dark);
+  font-size: 28px;
   margin: 0;
-  text-shadow: 3px 3px 0 var(--retro-purple);
-  letter-spacing: 2px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-.game-controls {
-  display: flex;
-  align-items: center;
-}
-
-.music-toggle {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  color: var(--retro-green);
-  font-size: 12px;
-}
-
-.music-toggle input {
-  margin-right: 8px;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--retro-green);
-  background-color: var(--retro-black);
-  cursor: pointer;
-  position: relative;
-  font-family: 'Courier New', monospace;
-  color: var(--retro-black);
-  text-align: center;
-  line-height: 16px;
-  font-size: 12px;
-}
-
-.music-toggle input:checked {
-  background-color: var(--retro-green);
-}
- 
-.music-toggle input:checked::after {
-  content: "✔"; 
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  color: var(--retro-black);
+.logo-container {
+  width: 120px;
+  height: 60px;
+  background-color: var(--agro-gray-light);
+  border: 2px dashed var(--agro-gray-medium);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  color: var(--agro-gray-dark);
+  overflow: hidden;
+}
+
+.logo-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+ 
+
+
+.music-toggle, .opacity-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--agro-green-dark);
+  font-size: 14px;
+  font-weight: 500;
+  
+}
+
+.music-toggle:first-child, .opacity-toggle:first-child {
+  margin-left: 0;
+}
+
+.music-toggle input, .opacity-toggle input {
+  margin-right: 8px;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--agro-green-primary);
+  background-color: var(--agro-white);
+  cursor: pointer;
+  position: relative;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.music-toggle input:checked, .opacity-toggle input:checked {
+  background-color: var(--agro-green-primary);
+}
+ 
+.music-toggle input:checked::after, .opacity-toggle input:checked::after {
+  content: "✓"; 
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--agro-white);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.reveal-button {
+  background: linear-gradient(135deg, var(--agro-yellow) 0%, var(--agro-yellow-dark) 100%);
+  color: var(--agro-black);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.reveal-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.reveal-button:active {
+  transform: translateY(0);
 }
 
 .game-stats-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  padding: 8px;
-  background-color: var(--retro-dark);
-  border: 2px solid var(--retro-purple);
-  border-radius: 4px;
-  font-size: 12px;
+  margin-bottom: 2px;
+  padding: 5px;
+  background: linear-gradient(135deg, var(--agro-gray-light) 0%, var(--agro-white) 100%);
+  border: 2px solid var(--agro-green-light);
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 .fps-meter {
@@ -145,16 +187,17 @@ main {
 }
 
 .game-messages {
-  color: var(--retro-yellow);
+  color: var(--agro-green-dark);
   text-align: center;
   flex-grow: 1;
-  font-size: 14px;
-  text-shadow: 1px 1px 0 var(--retro-black);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .game-stats {
-  color: var(--retro-green);
+  color: var(--agro-green-primary);
   text-align: right;
+  font-weight: 600;
 }
 
 .canvas-container {
@@ -162,31 +205,33 @@ main {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .game-canvas { 
-  border-radius: 4px; 
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-width: 100%;
   height: auto;
 }
 
 .game-instructions {
-  background-color: var(--retro-dark);
-  border: 2px solid var(--retro-purple);
-  border-radius: 4px;
-  padding: 15px;
-  margin-top: 20px;
+  background: linear-gradient(135deg, var(--agro-gray-light) 0%, var(--agro-white) 100%);
+  border: 2px solid var(--agro-green-light);
+  border-radius: 8px;
+  padding: 20px;
+  padding-top: 2px;
+  padding-bottom: 10px;
+  margin-top: 0px;
 }
 
 .game-instructions h3 {
-  color: var(--retro-yellow);
-  font-size: 16px;
-  margin-top: 0;
-  margin-bottom: 10px;
+  color: var(--agro-green-dark);
+  font-size: 18px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   text-align: center;
+  font-weight: 700;
 }
 
 .game-instructions ul {
@@ -196,31 +241,34 @@ main {
 }
 
 .game-instructions li {
-  font-size: 10px;
-  margin-bottom: 8px;
+  font-size: 14px;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
-  color: var(--retro-white);
+  color: var(--agro-black);
 }
 
 .game-instructions li::before {
-  content: "►";
-  color: var(--retro-green);
-  margin-right: 8px;
+  content: "▶";
+  color: var(--agro-green-primary);
+  margin-right: 10px;
+  font-size: 12px;
 }
+
 .selection-button-back { 
   margin-right: 20px;
 }
 
 .key {
   display: inline-block;
-  background-color: var(--retro-purple);
-  color: var(--retro-white);
-  padding: 4px 8px;
+  background: linear-gradient(135deg, var(--agro-green-primary) 0%, var(--agro-green-dark) 100%);
+  color: var(--agro-white);
+  padding: 6px 12px;
   margin: 0 4px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 10px;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .key.left {
@@ -230,34 +278,80 @@ main {
 .key.right {
   transform: rotate(90deg);
 }
+.instructions-list li {
+  margin-bottom: 0.5rem;
+}
+.mb-0 {
+  margin-bottom: 0rem;
+}
 
-/* Animaciones retro */
+/* Animaciones modernas */
 @keyframes pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
-
-.game-title {
-  animation: pulse 2s infinite;
-}
+ 
 
 /* Responsive */
 @media (max-width: 768px) {
   .game-container {
-    padding: 10px;
+    padding: 15px;
   }
   
   .game-title {
-    font-size: 18px;
+    font-size: 20px;
   }
   
   .game-instructions li {
-    font-size: 8px;
+    font-size: 12px;
   }
   
   .key {
-    padding: 2px 4px;
-    font-size: 8px;
+    padding: 4px 8px;
+    font-size: 10px;
   }
+  
+  .logo-container {
+    width: 80px;
+    height: 40px;
+  }
+}
+.game-header {
+  display: flex;
+  justify-content: space-between; /* separa logo, stats y controles */
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #ffffff00; /* o el color de fondo de tu juego */
+  color: white;
+}
+
+.game-logo {
+  height: 60px;
+  object-fit: contain;
+}
+.stats-messages-container {
+  display: flex; 
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  flex-grow: 1; /* para que ocupe el espacio disponible */
+  margin: 0 20px; /* espacio entre logo y controles */
+}
+.game-stats-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.game-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  justify-content: left;
 }

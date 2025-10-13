@@ -22,7 +22,8 @@ export const createGameObject = (options, myProps = {}) => {
         previousY: 0,
         canvasW: options.canvasW,
         canvasH: options.canvasH,
-        speed: options.speed || 1
+        speed: options.speed || 1,
+        fullOpacity: options.fullOpacity || false
     };
     
     // Hitbox for collision detection

@@ -22,7 +22,7 @@ const defaultHelpers = {
 // We'll need to include this library in our HTML or import it
 const FPSMeter = window.FPSMeter;
 
-export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement, selectedImage = 'image.png', musicEnabled = true, onWin = null, onGameOver = null) => {
+export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesElement, selectedImage = 'image.png', musicEnabled = true, onWin = null, onGameOver = null, fullOpacity = false) => {
     // Create the game engine object
     const engine = {};
 
@@ -87,7 +87,8 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
                 input: typeof getInput === 'function' ? getInput() : {},
                 x: 0, // esquina superior izquierda
                 y: 0,
-                radius: 8
+                radius: 8,
+                fullOpacity: fullOpacity
             });
 
             console.log("Player created:", player);
@@ -195,7 +196,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
     engine.playerDied = () => {
         console.log("Player died");
-        engine.showMessage("You died :(");
+        engine.showMessage("Has muerto :(");
 
         // Detener la música del juego
         if (audioEngine && musicEnabled) {
@@ -217,7 +218,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
         if (clearedPercentage >= 80) {
             console.log("Win!");
-            engine.showMessage("You win!");
+            engine.showMessage("¡Has ganado!");
 
             // Detener la música del juego
             if (audioEngine && musicEnabled) {
@@ -236,7 +237,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         if (clearedPercentage >= nextAddTimePercentage) {
             remainingTime += 30;
             nextAddTimePercentage += 10; // We add time each 10 now
-            engine.showMessage("Extra time!");
+            engine.showMessage("Tiempo extra!");
 
 
             audioEngine.trigger("extra-time");
@@ -350,7 +351,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             if (remainingTime === 0) {
                 engine.playerDied();
             } else if (remainingTime === 30) {
-                engine.showMessage("Hurry up!!");
+                engine.showMessage("¡Apresúrate!");
 
                 if (audioEngine && musicEnabled) {
                     audioEngine.trigger("hurry");
@@ -428,7 +429,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     const updateStats = (tFrame) => {
         if (tFrame - lastStatsUpdateTime > 1000) {
             if (statsElement) {
-                statsElement.innerText = 'Lives: ' + player.lives + ' | ' + clearedPercentage + '% | Time: ' + remainingTime;
+                statsElement.innerText = 'Vidas: ' + player.lives + '  |  ' + clearedPercentage + '% revelado  |  Tiempo: ' + remainingTime;
             }
             lastStatsUpdateTime = tFrame;
         }
@@ -480,6 +481,23 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
 
         console.log("Game engine cleaned up");
+    };
+ 
+    engine.revealImage = () => {
+        if (!c2d || !backgroundImgElement) { 
+            return;
+        }
+         
+        c2d.globalAlpha = 1.0;
+        c2d.drawImage(backgroundImgElement, 0, 0, canvasW, canvasH);
+        c2d.globalAlpha = 1.0;
+         
+    };
+ 
+    engine.setFullOpacity = (value) => {
+        if (player && typeof player.setFullOpacity === 'function') {
+            player.setFullOpacity(value); 
+        }
     };
 
     // Initialize the game
