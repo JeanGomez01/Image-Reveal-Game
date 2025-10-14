@@ -10,7 +10,8 @@ import { createCircleBumper } from '../actors/circleBumper';
 import { createSpriteEnemy } from '../actors/spriteEnemy';
 import { createFemaleEnemy } from '../actors/femaleEnemy';
 import { helpers } from './helpers';
-
+import { createSimpleImageEnemy } from '../actors/computerSimpleEnemy';
+import { createSimpleGearEnemy } from '../actors/gearSimpleEnemy';
 // Implementaciones predeterminadas en caso de error
 const defaultInput = { up: false, down: false, left: false, right: false, fire: false };
 const defaultHelpers = {
@@ -41,11 +42,11 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
     let clearedPercentage = 0;
     let totalArea = 0;
     let filledArea = 0;
-    let remainingTime = 100;
+    let remainingTime = 30;
     let lastFrameTime = 0;
     let lastRemaningTimeFrameTime = 0;
     let backgroundImgElement;
-    let nextAddTimePercentage = 30;
+    let nextAddTimePercentage = 5;
     let gameLoopId = null;
     let gameStarted = false;
     let audioEngine = null;
@@ -235,8 +236,8 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
         }
 
         if (clearedPercentage >= nextAddTimePercentage) {
-            remainingTime += 30;
-            nextAddTimePercentage += 10; // We add time each 10 now
+            remainingTime += 10;
+            nextAddTimePercentage += 5; // We add time each 5 now
             engine.showMessage("Tiempo extra!");
 
 
@@ -291,7 +292,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             return; // Salir si no hay jugador
         }
 
-        remainingTime = 180;
+        remainingTime = 30;
 
         const enemyOptions = {
             canvasW: canvasW,
@@ -308,25 +309,14 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
         // Verificar que las funciones de creación de enemigos existen
         try {
-            // Añadir enemigos con sprite animado
-            if (typeof createSpriteEnemy === 'function') {
-                enemies.push(createSpriteEnemy(enemySpriteOptions));
-            }
-
-            // Añadir enemigo femenino con 4 direcciones
-            if (typeof createFemaleEnemy === 'function') {
-                enemies.push(createFemaleEnemy(enemyOptions));
-                enemies.push(createFemaleEnemy(enemyOptions));
-            }
-
-            // // Añadir enemigos circulares tradicionales
-            // if (typeof createCircleEnemy === 'function') {
-            //     enemies.push(createCircleEnemy(enemyOptions));
-            // }
-
-            // if (typeof createCircleBumper === 'function') {
-            //     enemies.push(createCircleBumper(enemyOptions));
-            // }
+           
+            enemies.push(createSimpleImageEnemy(enemyOptions));
+            enemies.push(createSimpleImageEnemy(enemyOptions));
+            enemies.push(createSimpleImageEnemy(enemyOptions));
+            enemies.push(createSimpleGearEnemy(enemyOptions));
+            enemies.push(createSimpleGearEnemy(enemyOptions));
+            enemies.push(createSimpleGearEnemy(enemyOptions));
+ 
         } catch (error) {
             console.error("Error creating enemies:", error);
         }
@@ -348,7 +338,7 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             --remainingTime;
             lastRemaningTimeFrameTime = tFrame;
 
-            if (remainingTime === 0) {
+            if (remainingTime + 2 === 0) {
                 engine.playerDied();
             } else if (remainingTime === 30) {
                 engine.showMessage("¡Apresúrate!");
@@ -473,17 +463,17 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             } catch (error) {
                 console.error("Error destroying FPSMeter:", error);
             }
-        } 
-    if (statsElement) {
-        statsElement.innerText = '';
-    } 
-    if (messagesElement) {
-        messagesElement.innerText = '';
-    }
- 
-    if (fpsMeterElement) {
-        fpsMeterElement.innerHTML = '';
-    }
+        }
+        if (statsElement) {
+            statsElement.innerText = '';
+        }
+        if (messagesElement) {
+            messagesElement.innerText = '';
+        }
+
+        if (fpsMeterElement) {
+            fpsMeterElement.innerHTML = '';
+        }
         // Detener todos los sonidos
         if (audioEngine) {
             audioEngine.stopAll();
@@ -491,21 +481,21 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
 
         console.log("Game engine cleaned up");
     };
- 
+
     engine.revealImage = () => {
-        if (!c2d || !backgroundImgElement) { 
+        if (!c2d || !backgroundImgElement) {
             return;
         }
-         
+
         c2d.globalAlpha = 1.0;
         c2d.drawImage(backgroundImgElement, 0, 0, canvasW, canvasH);
         c2d.globalAlpha = 1.0;
-         
+
     };
- 
+
     engine.setFullOpacity = (value) => {
         if (player && typeof player.setFullOpacity === 'function') {
-            player.setFullOpacity(value); 
+            player.setFullOpacity(value);
         }
     };
 

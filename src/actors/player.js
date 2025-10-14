@@ -20,7 +20,8 @@ export const createPlayer = (options, myProps = {}) => {
     const that = createGameObject(options, my);
 
     // Player specific properties
-    that.lives = options.lives || 3;
+    that.lives = options.lives || 1;
+    that.speed = 1;
     that.points = 0;
 
     // Movement direction tracking (for restricting diagonal movement)
@@ -135,7 +136,7 @@ export const createPlayer = (options, myProps = {}) => {
         canvas.width = width;
         canvas.height = height;
         return canvas;
-    }
+    } 
 
     // Update method
     const update = (tFrame, dt) => {
@@ -178,26 +179,26 @@ export const createPlayer = (options, myProps = {}) => {
 
         // Aplicar movimiento según la dirección actual
         if (currentMoveDirection === 'horizontal') {
-            // Solo permitir movimiento horizontal
-            if (input.left && that.x > 0) {
+    // Solo permitir movimiento horizontal
+    if (input.left && that.x > 0) {
                 that.x = Math.max(0, that.x - that.speed);
-                currentDirection = 2; // Izquierda (tercera fila)
-            }
-            if (input.right && that.x < that.canvasW) {
+        currentDirection = 2; // Izquierda (tercera fila)
+    }
+    if (input.right && that.x < that.canvasW) {
                 that.x = Math.min(that.canvasW, that.x + that.speed);
-                currentDirection = 1; // Derecha (segunda fila)
-            }
-        } else if (currentMoveDirection === 'vertical') {
-            // Solo permitir movimiento vertical
-            if (input.up && that.y > 0) {
+        currentDirection = 1; // Derecha (segunda fila)
+    }
+} else if (currentMoveDirection === 'vertical') {
+    // Solo permitir movimiento vertical
+    if (input.up && that.y > 0) {
                 that.y = Math.max(0, that.y - that.speed);
-                currentDirection = 3; // Arriba (cuarta fila)
-            }
-            if (input.down && that.y < that.canvasH) {
+        currentDirection = 3; // Arriba (cuarta fila)
+    }
+    if (input.down && that.y < that.canvasH) {
                 that.y = Math.min(that.canvasH, that.y + that.speed);
-                currentDirection = 0; // Abajo (primera fila)
-            }
-        }
+        currentDirection = 0; // Abajo (primera fila)
+    }
+}
 
         // Actualizar la animación
         if (isMoving) {
@@ -314,12 +315,12 @@ export const createPlayer = (options, myProps = {}) => {
                     }
                 }
             } else {
-                // We are just drawing
-                // Asegurarse de que el índice esté dentro de los límites
-                const safeIndex = Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1);
-                map[safeIndex] = 'T';
-                clearMapPointsCache();
-            }
+    // We are just drawing
+        // Asegurarse de que el índice esté dentro de los límites
+        const safeIndex = Math.min(Math.floor(that.y) * that.canvasW + Math.floor(that.x), map.length - 1);
+        map[safeIndex] = 'T';
+    clearMapPointsCache();
+}
         } else if (currentPoint === 'P') {
             // We are just walking on a path
             lastPathY = that.y;
@@ -443,7 +444,7 @@ export const createPlayer = (options, myProps = {}) => {
     const reset = () => {
         replaceValuesInMap(null, 'F');
 
-        that.lives = 3;
+        that.lives = 1;
         haveJustDied = false;
         currentMoveDirection = null; // Resetear la dirección de movimiento
 

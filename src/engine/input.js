@@ -53,6 +53,49 @@ const onkey = (ev, key, pressed) => {
             break;
     }
 };
+ 
+let gamepadIndex = null;
+ 
+const detectGamepad = () => {
+    const gamepads = navigator.getGamepads();
+    for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+            gamepadIndex = i;
+            const gamepadId = gamepads[i].id.toLowerCase();
+            
+            // Detectar PS5 DualSense
+            if (gamepadId.includes('dualsense') || gamepadId.includes('ps5') || gamepadId.includes('054c')) {
+                console.log("Mando PS5 detectado:", gamepads[i].id);
+            } else {
+                console.log("Gamepad detectado:", gamepads[i].id);
+            }
+            return true;
+        }
+    }
+    return false;
+};
+ 
+const getGamepadInput = () => {
+    if (gamepadIndex === null) return {};
+    
+    const gamepad = navigator.getGamepads()[gamepadIndex];
+    if (!gamepad) return {};
+    
+    return {
+        up: gamepad.axes[1] < -0.3 || gamepad.buttons[12]?.pressed,    // Stick arriba o D-pad arriba
+        down: gamepad.axes[1] > 0.3 || gamepad.buttons[13]?.pressed,   // Stick abajo o D-pad abajo  
+        left: gamepad.axes[0] < -0.3 || gamepad.buttons[14]?.pressed,  // Stick izquierda o D-pad izquierda
+        right: gamepad.axes[0] > 0.3 || gamepad.buttons[15]?.pressed,  // Stick derecha o D-pad derecha
+        fire: gamepad.buttons[0]?.pressed ||  // X (Cruz)
+              gamepad.buttons[1]?.pressed ||  // Círculo  
+              gamepad.buttons[2]?.pressed ||  // Cuadrado
+              gamepad.buttons[3]?.pressed ||  // Triángulo
+              gamepad.buttons[4]?.pressed ||  // L1
+              gamepad.buttons[5]?.pressed ||  // R1
+              gamepad.buttons[6] > 0.1 ||     // L2
+              gamepad.buttons[7] > 0.1        // R2
+    };
+}; 
 
 // Initialize input handlers
 export const initInput = () => {
@@ -75,11 +118,31 @@ function handleKeyDown(ev) {
 function handleKeyUp(ev) {
     return onkey(ev, ev.keyCode, false);
 }
-
+ 
 // Get the current input state
 export const getInput = () => {
-    return input;
+    detectGamepad();
+    
+    const keyboardInput = {
+        up: input.up,
+        down: input.down,
+        left: input.left,
+        right: input.right,
+        fire: input.fire
+    };
+    
+    const gamepadInput = getGamepadInput();
+    
+    // Combinar ambos inputs (cualquiera de los dos funciona)
+    return {
+        up: gamepadInput.up || keyboardInput.up,
+        down: gamepadInput.down || keyboardInput.down,
+        left: gamepadInput.left || keyboardInput.left,
+        right: gamepadInput.right || keyboardInput.right,
+        fire: gamepadInput.fire || keyboardInput.fire
+    };
 };
+// ========== FIN DE MODIFICACIÓN ==========
 
 // Store in the global namespace for access from other modules
 window.LP.initInput = initInput;
