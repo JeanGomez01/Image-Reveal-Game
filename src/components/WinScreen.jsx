@@ -38,8 +38,8 @@ const WinScreen = ({ onRestart, imageUrl }) => {
     const img = imageRef.current;
 
     // Ajustar el tamaño del canvas
-    canvas.width = 600;
-    canvas.height = 600;
+    canvas.width = 550;
+    canvas.height = 550;
 
     let startTime = null;
     const animationDuration = 2000; // 4 segundos

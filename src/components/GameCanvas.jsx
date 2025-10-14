@@ -273,15 +273,20 @@ const GameCanvas = () => {
   };
 
   const handleStartClick = () => {
-    // Reproducir sonido
-    if (window.LP && window.LP.audioEngine) {
-      window.LP.audioEngine.trigger("touch-image");
-    }
-
-    // Mostrar la pantalla de selección de imágenes
-    setShowMenu(false);
-    setShowSelectionScreen(true);
-  };
+  // Reproducir sonido
+  if (window.LP && window.LP.audioEngine) {
+    window.LP.audioEngine.trigger("touch-image");
+  }
+ 
+  const randomImage = selectRandomImage();
+  setSelectedImage(randomImage);
+  
+  console.log("Imagen seleccionada aleatoriamente:", randomImage);
+ 
+  setShowMenu(false);
+  setShowSelectionScreen(false);
+  setGameInitialized(false);
+};
 
   const handleImageSelect = (imageSrc) => {
     setSelectedImage(imageSrc);
@@ -394,7 +399,21 @@ const GameCanvas = () => {
       window.LP.audioEngine.trigger("music-game");
     }
   };
-
+const selectRandomImage = () => {
+  const availableImages = [
+    "agroexpo-1.jpg",
+    "agroexpo-2.jpg",
+    "agroexpo-3.jpg",
+    "agroexpo-4.jpg",
+    "agroexpo-5.jpg",
+    "agroexpo-6.png",
+    "agroexpo-7.png",
+    "agroexpo-8.png", 
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * availableImages.length);
+  return availableImages[randomIndex];
+};
   return (
     <div className="game-container">
       {error && (
@@ -405,7 +424,7 @@ const GameCanvas = () => {
 
       <div className="game-header">
         <img
-          src="/logo-rivercon-adjusted.png"
+          src="/logo-agriexpo.jpg"
           alt="Logo del juego"
           className="game-logo"
         />
@@ -516,34 +535,50 @@ const GameCanvas = () => {
       </div>
 
       {
-        <div className="game-instructions">
-          <h3 className="mb-0">Cómo jugar:</h3>
-          <ul className="instructions-list">
-            <li>
-              Usar <span className="key up">↑</span>{" "}
-              <span className="key down">↓</span>{" "}
-              <span className="key left">↑</span>{" "}
-              <span className="key right">↑</span> para moverte
-            </li>
-            <li>
-              Manten presionado <span className="key">ESPACIO</span> para
-              dibujar
-            </li>
-            <li>Revela el 80% de la imagen para ganar</li>
-            <li>Esquiva los enemigos mientras dibujas</li>
-          </ul>
-          {!showMenu &&
-            !showSelectionScreen &&
-            !showWinScreen &&
-            !showGameOverScreen && (
-              <button
-                className="selection-button back"
-                onClick={handleBackToMenu}
-              >
-                VOLVER AL MENÚ
-              </button>
-            )}
-        </div>
+        <div
+  className="game-instructions"
+  style={{
+    display: "flex",
+    justifyContent: "space-around",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: "10px",
+  }}
+>
+  <div  >
+    <h3 className="mb-0" style={{ marginBottom: "8px" }}>Cómo jugar:</h3>
+    <ul
+      className="instructions-list"
+      style={{ margin: 0, paddingLeft: "20px", fontSize: "14px" }}
+    >
+      <li>
+        Usar{" "}
+        <span className="key up">↑</span>{" "}
+        <span className="key down">↓</span>{" "}
+        <span className="key left">←</span>{" "}
+        <span className="key right">→</span> para moverte
+      </li>
+      <li>
+        Mantén presionado <span className="key">ESPACIO</span> para dibujar
+      </li>
+      <li>Revela el 80% de la imagen para ganar</li>
+      <li>Esquiva los enemigos mientras dibujas</li>
+    </ul>
+  </div>
+
+  {!showMenu &&
+    !showSelectionScreen &&
+    !showWinScreen &&
+    !showGameOverScreen && (
+      <button
+        className="selection-button back"
+        onClick={handleBackToMenu}
+         
+      >
+        VOLVER AL MENÚ
+      </button>
+    )}
+</div>
       }
     </div>
   );

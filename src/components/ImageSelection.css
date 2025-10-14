@@ -345,10 +345,9 @@
 
 .result-canvas {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+    top: 0; 
     height: 100%;
+    width: auto;
     z-index: 1;
 }
 

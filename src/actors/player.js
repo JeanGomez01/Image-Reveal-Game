@@ -238,7 +238,7 @@ export const createPlayer = (options, myProps = {}) => {
 
                 if (previousPoint !== 'P') {
                     that.log("path closed!", previousPoint);
-
+                    window.LP.audioEngine.trigger("close-path");
                     // Transform all temporal paths into final paths
                     // Bug Handling - This is a workaround for a bug in the original code
                     let percentageCleared = replaceValuesInMap('T', 'B');
@@ -614,7 +614,7 @@ export const createPlayer = (options, myProps = {}) => {
                             data[pixelIndex] = 70; // Dark Blue with transparency
                             data[pixelIndex + 1] = 70;
                             data[pixelIndex + 2] = 70;
-                            data[pixelIndex + 3] = that.fullOpacity ? 255 : 240; // Opacidad configurable 
+                            data[pixelIndex + 3] = that.fullOpacity ? 255 : 245; // Opacidad configurable 
                             break;
                         case 'P': // Path
                             data[pixelIndex] = 255; // White, 100% opaque

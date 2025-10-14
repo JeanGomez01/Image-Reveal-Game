@@ -19,14 +19,16 @@ export const initAudioEngine = () => {
 
     // Sound effects mapping
     const sounds = {
-        'music-game': { url: 'sounds/523725__mrthenoronha__8-bit-water-stage-loop.mp3', loop: true, volume: 0.5, category: 'music' },
-        'start-game': { url: 'sounds/520937__mrthenoronha__8-bit-game-intro-loop.mp3', loop: true, volume: 0.4, category: 'music' },
+        'music-game': { url: 'sounds/ambient-electro-house-259049.mp3', loop: true, volume: 0.5, category: 'music' },
+        // 'start-game': { url: 'sounds/520937__mrthenoronha__8-bit-game-intro-loop.mp3', loop: true, volume: 0.4, category: 'music' },
+        'start-game': { url: 'sounds/8bit-music-for-game-68698.mp3', loop: true, volume: 0.7, category: 'music' },
         // 'start-game': { url: 'sounds/8-bit-loop-189494.mp3', loop: true, volume: 0.3, category: 'music' }, //Version alternativa
         'game-over': { url: 'sounds/game-over-38511.mp3', loop: false, volume: 0.8, category: 'sfx' },
         'win': { url: 'sounds/518308__mrthenoronha__win8-bit.wav', loop: false, volume: 0.8, category: 'sfx' },
         'extra-time': { url: 'sounds/extra-time-6104.mp3', loop: false, volume: 0.8, category: 'sfx' },
         'hurry': { url: 'sounds/518304__mrthenoronha__hurry-up-8-bit.wav', loop: false, volume: 0.8, category: 'sfx' },
-        'touched': { url: 'https://freesound.org/data/previews/331/331912_3248244-lq.mp3', loop: false, volume: 0.8, category: 'sfx' },
+        'touched': { url: 'https://cdn.freesound.org/previews/350/350985_5450487-lq.mp3', loop: false, volume: 0.9, category: 'sfx' },
+        'close-path': { url: 'sounds/sfx_jump_07-80241.mp3', loop: false, volume: 0.8, category: 'sfx' },
         'touch-image': { url: 'https://freesound.org/data/previews/242/242857_4284968-lq.mp3', loop: false, volume: 0.6, category: 'sfx' },
         'slide': { url: 'sounds/624842__mr_fox21__dia-image-slide.wav', loop: false, volume: 0.8, category: 'sfx' }
     };

@@ -473,8 +473,17 @@ export const initGame = (canvasElement, statsElement, fpsMeterElement, messagesE
             } catch (error) {
                 console.error("Error destroying FPSMeter:", error);
             }
-        }
-
+        } 
+    if (statsElement) {
+        statsElement.innerText = '';
+    } 
+    if (messagesElement) {
+        messagesElement.innerText = '';
+    }
+ 
+    if (fpsMeterElement) {
+        fpsMeterElement.innerHTML = '';
+    }
         // Detener todos los sonidos
         if (audioEngine) {
             audioEngine.stopAll();
